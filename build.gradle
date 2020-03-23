@@ -9,7 +9,7 @@ buildscript {
         gTargetSdkVersion = 29
 
         gVersionCode = 10111
-        gVersionName = "1.1.10R"
+        gVersionName = "1.1.10R2"
 
         gKotlinVersion = '1.3.61'
         gKotlinCoroutineVersion = '1.3.3'
