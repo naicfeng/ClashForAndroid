@@ -20,6 +20,7 @@ data class Proxy(
         SOCKS5,
         HTTP,
         VMESS,
+	TORJAN,
         LOAD_BALANCE,
         UNKNOWN;
 
@@ -31,11 +32,12 @@ data class Proxy(
                 DIRECT -> TYPE_DIRECT
                 REJECT -> TYPE_REJECT
                 SHADOWSOCKS -> TYPE_SHADOWSOCKS
-                SHADOWSOCKSR->TYPE_SHADOWSOCKSR
+                SHADOWSOCKSR-> TYPE_SHADOWSOCKSR
                 SNELL -> TYPE_SNELL
                 SOCKS5 -> TYPE_SOCKS5
                 HTTP -> TYPE_HTTP
                 VMESS -> TYPE_VMESS
+		TORJAN-> TYPE_TORJAN
                 LOAD_BALANCE -> TYPE_LOAD_BALANCE
                 UNKNOWN -> TYPE_UNKNOWN
             }
@@ -55,6 +57,7 @@ data class Proxy(
                     TYPE_SOCKS5 -> SOCKS5
                     TYPE_HTTP -> HTTP
                     TYPE_VMESS -> VMESS
+		    TYPE_TORJAN -> TORJAN
                     TYPE_LOAD_BALANCE -> LOAD_BALANCE
                     TYPE_UNKNOWN -> UNKNOWN
                     else -> UNKNOWN
@@ -75,6 +78,7 @@ data class Proxy(
         private const val TYPE_SOCKS5 = "Socks5"
         private const val TYPE_HTTP = "Http"
         private const val TYPE_VMESS = "Vmess"
+	private const val TYPE_TORJAN = "Trojan"
         private const val TYPE_LOAD_BALANCE = "LoadBalance"
         private const val TYPE_UNKNOWN = "Unknown"
 
