@@ -9,7 +9,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13.x
+          go-version: 1.14.x
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
@@ -31,7 +31,7 @@ jobs:
         env:
           NAME: clash
           BINDIR: bin
-        run: make -j releases
+        run: make -j releases-amd64
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1

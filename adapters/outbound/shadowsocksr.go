@@ -91,7 +91,7 @@ func (ssr *ShadowSocksR) DialContext(ctx context.Context, metadata *C.Metadata) 
 		return nil, fmt.Errorf("%s connect error: %w", ssr.server, err)
 	}
 
-	return newConn(ssconn, ssr), nil
+	return NewConn(ssconn, ssr), nil
 }
 
 func (ssr *ShadowSocksR) MarshalJSON() ([]byte, error) {

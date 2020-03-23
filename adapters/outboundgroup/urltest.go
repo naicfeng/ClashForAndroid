@@ -38,6 +38,10 @@ func (u *URLTest) DialUDP(metadata *C.Metadata) (C.PacketConn, error) {
 	return pc, err
 }
 
+func (u *URLTest) GetProviders() []provider.ProxyProvider {
+	return u.providers
+}
+
 func (u *URLTest) proxies() []C.Proxy {
 	elm, _, _ := u.single.Do(func() (interface{}, error) {
 		return getProvidersProxies(u.providers), nil
@@ -86,7 +90,7 @@ func (u *URLTest) MarshalJSON() ([]byte, error) {
 
 func NewURLTest(name string, providers []provider.ProxyProvider) *URLTest {
 	return &URLTest{
-		Base:       outbound.NewBase(name, C.URLTest, false),
+		Base:       outbound.NewBase(name, "", C.URLTest, false),
 		single:     singledo.NewSingle(defaultGetProxiesDuration),
 		fastSingle: singledo.NewSingle(time.Second * 10),
 		providers:  providers,

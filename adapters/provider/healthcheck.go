@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	defaultURLTestURL     = "https://www.gstatic.com/generate_204"
 	defaultURLTestTimeout = time.Second * 5
 )
 
@@ -61,6 +62,10 @@ func (hc *HealthCheck) close() {
 }
 
 func NewHealthCheck(proxies []C.Proxy, url string, interval uint) *HealthCheck {
+	if len(url) == 0 {
+		url = defaultURLTestURL
+	}
+
 	return &HealthCheck{
 		proxies:  proxies,
 		url:      url,
