@@ -66,6 +66,10 @@ func (s *Selector) Set(name string) error {
 	return errors.New("Proxy does not exist")
 }
 
+func (s *Selector) GetProviders() []provider.ProxyProvider {
+	return s.providers
+}
+
 func (s *Selector) proxies() []C.Proxy {
 	elm, _, _ := s.single.Do(func() (interface{}, error) {
 		return getProvidersProxies(s.providers), nil
@@ -77,7 +81,7 @@ func (s *Selector) proxies() []C.Proxy {
 func NewSelector(name string, providers []provider.ProxyProvider) *Selector {
 	selected := providers[0].Proxies()[0]
 	return &Selector{
-		Base:      outbound.NewBase(name, C.Selector, false),
+		Base:      outbound.NewBase(name, "", C.Selector, false),
 		single:    singledo.NewSingle(defaultGetProxiesDuration),
 		providers: providers,
 		selected:  selected,

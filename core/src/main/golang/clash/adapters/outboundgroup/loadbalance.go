@@ -99,6 +99,10 @@ func (lb *LoadBalance) SupportUDP() bool {
 	return true
 }
 
+func (lb *LoadBalance) GetProviders() []provider.ProxyProvider {
+	return lb.providers
+}
+
 func (lb *LoadBalance) proxies() []C.Proxy {
 	elm, _, _ := lb.single.Do(func() (interface{}, error) {
 		return getProvidersProxies(lb.providers), nil
@@ -120,7 +124,7 @@ func (lb *LoadBalance) MarshalJSON() ([]byte, error) {
 
 func NewLoadBalance(name string, providers []provider.ProxyProvider) *LoadBalance {
 	return &LoadBalance{
-		Base:      outbound.NewBase(name, C.LoadBalance, false),
+		Base:      outbound.NewBase(name, "", C.LoadBalance, false),
 		single:    singledo.NewSingle(defaultGetProxiesDuration),
 		maxRetry:  3,
 		providers: providers,

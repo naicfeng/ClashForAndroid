@@ -27,6 +27,12 @@ WINDOWS_ARCH_LIST = \
 	windows-386 \
 	windows-amd64
 
+PLATFORM_LIST_64 = \
+	linux-amd64
+
+WINDOWS_ARCH_LIST_64 = \
+	windows-amd64
+
 all: linux-amd64 darwin-amd64 windows-amd64 # Most used
 
 darwin-amd64:
@@ -83,6 +89,9 @@ windows-amd64:
 gz_releases=$(addsuffix .gz, $(PLATFORM_LIST))
 zip_releases=$(addsuffix .zip, $(WINDOWS_ARCH_LIST))
 
+gz_releases-64=$(addsuffix .gz, $(PLATFORM_LIST_64))
+zip_releases-64=$(addsuffix .zip, $(WINDOWS_ARCH_LIST_64))
+
 $(gz_releases): %.gz : %
 	chmod +x $(BINDIR)/$(NAME)-$(basename $@)
 	gzip -f -S -$(VERSION).gz $(BINDIR)/$(NAME)-$(basename $@)
@@ -93,5 +102,8 @@ $(zip_releases): %.zip : %
 all-arch: $(PLATFORM_LIST) $(WINDOWS_ARCH_LIST)
 
 releases: $(gz_releases) $(zip_releases)
+
+releases-amd64: $(gz_releases-64) $(zip_releases-64)
+
 clean:
 	rm $(BINDIR)/*

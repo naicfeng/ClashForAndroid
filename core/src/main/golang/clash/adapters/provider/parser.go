@@ -3,6 +3,7 @@ package provider
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/Dreamacro/clash/common/structure"
@@ -27,7 +28,7 @@ type proxyProviderSchema struct {
 	HealthCheck healthCheckSchema `provider:"health-check,omitempty"`
 }
 
-func ParseProxyProvider(name string, mapping map[string]interface{}) (ProxyProvider, error) {
+func ParseProxyProvider(name string, mapping map[string]interface{}, baseDir string) (ProxyProvider, error) {
 	decoder := structure.NewDecoder(structure.Option{TagName: "provider", WeaklyTypedInput: true})
 
 	schema := &proxyProviderSchema{}
@@ -41,7 +42,7 @@ func ParseProxyProvider(name string, mapping map[string]interface{}) (ProxyProvi
 	}
 	hc := NewHealthCheck([]C.Proxy{}, schema.HealthCheck.URL, hcInterval)
 
-	path := C.Path.Resolve(schema.Path)
+	path := filepath.Join(baseDir, schema.Path)
 
 	var vehicle Vehicle
 	switch schema.Type {
