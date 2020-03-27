@@ -115,20 +115,20 @@ type RawConfig struct {
 	ExternalUI         string       `yaml:"external-ui"`
 	Secret             string       `yaml:"secret"`
 
-	ProxyProvider map[string]map[string]interface{} `yaml:"proxy-providers"`
+	ProxyProvider map[string]map[string]interface{} `yaml:"proxy-provider"`
 	Hosts         map[string]string                 `yaml:"hosts"`
 	DNS           RawDNS                            `yaml:"dns"`
-    Tun           Tun                               `yaml:"tun"`
+	Tun           Tun                               `yaml:"tun"`
 	Experimental  Experimental                      `yaml:"experimental"`
-	Proxy         []map[string]interface{}          `yaml:"proxies"`
-	ProxyGroup    []map[string]interface{}          `yaml:"proxy-groups"`
-	Rule          []string                          `yaml:"rules"`
+	Proxy         []map[string]interface{}          `yaml:"Proxy"`
+	ProxyGroup    []map[string]interface{}          `yaml:"Proxy Group"`
+	Rule          []string                          `yaml:"Rule"`
 
-	// remove after 1.0
-	ProxyProviderOld map[string]map[string]interface{} `yaml:"proxy-provider"`
-	ProxyOld         []map[string]interface{}          `yaml:"Proxy"`
-	ProxyGroupOld    []map[string]interface{}          `yaml:"Proxy Group"`
-	RuleOld          []string                          `yaml:"Rule"`
+	// try fix bridge (default old)
+	ProxyProviderNew map[string]map[string]interface{} `yaml:"proxy-providers"`
+	ProxyNew         []map[string]interface{}          `yaml:"proxies"`
+	ProxyGroupNew    []map[string]interface{}          `yaml:"proxy-groups"`
+	RuleNew          []string                          `yaml:"rules"`
 }
 
 // Parse config
@@ -175,9 +175,9 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 		},
 
 		// remove after 1.0
-		RuleOld:       []string{},
-		ProxyOld:      []map[string]interface{}{},
-		ProxyGroupOld: []map[string]interface{}{},
+		RuleNew:       []string{},
+		ProxyNew:      []map[string]interface{}{},
+		ProxyGroupNew: []map[string]interface{}{},
 	}
 
 	if err := yaml.Unmarshal(buf, &rawCfg); err != nil {
@@ -274,15 +274,15 @@ func parseProxies(cfg *RawConfig, baseDir string) (proxies map[string]C.Proxy, p
 	providersConfig := cfg.ProxyProvider
 
 	if len(proxiesConfig) == 0 {
-		proxiesConfig = cfg.ProxyOld
+		proxiesConfig = cfg.ProxyNew
 	}
 
 	if len(groupsConfig) == 0 {
-		groupsConfig = cfg.ProxyGroupOld
+		groupsConfig = cfg.ProxyGroupNew
 	}
 
 	if len(providersConfig) == 0 {
-		providersConfig = cfg.ProxyProviderOld
+		providersConfig = cfg.ProxyProviderNew
 	}
 
 	defer func() {
@@ -394,7 +394,7 @@ func parseRules(cfg *RawConfig, proxies map[string]C.Proxy) ([]C.Rule, error) {
 
 	// remove after 1.0
 	if len(rulesConfig) == 0 {
-		rulesConfig = cfg.RuleOld
+		rulesConfig = cfg.RuleNew
 	}
 
 	// parse rules
