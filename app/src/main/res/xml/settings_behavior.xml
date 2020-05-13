@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--suppress DeprecatedClassUsageInspection -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/boot">
+    <PreferenceCategory android:title="@string/restart">
         <SwitchPreference
             android:key="start_on_boot"
-            android:title="@string/start_on_boot"
-            android:summary="@string/start_clash_on_system_boot" />
+            android:title="@string/auto_restart"
+            android:summary="@string/allow_clash_auto_restart" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/notification">
         <SwitchPreference

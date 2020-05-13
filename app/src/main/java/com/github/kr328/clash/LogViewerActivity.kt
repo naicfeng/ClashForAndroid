@@ -10,17 +10,15 @@ import androidx.core.net.toFile
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.kr328.clash.adapter.LiveLogAdapter
 import com.github.kr328.clash.adapter.LogAdapter
+import com.github.kr328.clash.common.utils.intent
 import com.github.kr328.clash.core.event.LogEvent
-import com.github.kr328.clash.service.util.intent
 import kotlinx.android.synthetic.main.activity_log_viewer.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import java.io.File
-import kotlin.streams.toList
 
 class LogViewerActivity : BaseActivity() {
     private val pauseMutex = Mutex()
-    private var pollingThread: Thread? = null
     private val connection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
             finish()
@@ -49,12 +47,6 @@ class LogViewerActivity : BaseActivity() {
             startFileMode(file.toFile())
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        pollingThread?.interrupt()
-    }
-
     override fun onStop() {
         super.onStop()
 
@@ -62,9 +54,6 @@ class LogViewerActivity : BaseActivity() {
             pauseMutex.lock()
         }
     }
-
-    override val activityLabel: CharSequence
-        get() = getText(R.string.log_viewer)
 
     override fun onStart() {
         super.onStart()
@@ -82,6 +71,7 @@ class LogViewerActivity : BaseActivity() {
         mainList.itemAnimator?.removeDuration = 100
 
         stop.setOnClickListener {
+            unbindService(connection)
             stopService(LogcatService::class.intent)
             finish()
         }
@@ -95,17 +85,17 @@ class LogViewerActivity : BaseActivity() {
         launch {
             val items = withContext(Dispatchers.IO) {
                 try {
-                    file.readText()
-                        .split("\n")
-                        .parallelStream()
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() && !it.startsWith("#") }
-                        .map { it.split(" ", limit = 3) }
-                        .filter { it.size == 3 }
-                        .map { LogEvent(LogEvent.Level.valueOf(it[1]), it[2], it[0].toLong()) }
-                        .toList()
+                    file.bufferedReader().useLines { lines ->
+                        lines
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() && !it.startsWith("#") }
+                            .map { it.split(" ", limit = 3) }
+                            .filter { it.size == 3 }
+                            .map { LogEvent(LogEvent.Level.valueOf(it[1]), it[2], it[0].toLong()) }
+                            .toList()
+                    }
                 } catch (e: Exception) {
-                    makeSnackbarException(getString(R.string.open_log_failure), e.message)
+                    showSnackbarException(getString(R.string.open_log_failure), e.message)
 
                     throw CancellationException()
                 }

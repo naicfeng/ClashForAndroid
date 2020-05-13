@@ -2,11 +2,11 @@ package com.github.kr328.clash.settings
 
 import android.content.pm.PackageManager
 import android.os.Bundle
-import com.github.kr328.clash.OnBootReceiver
 import com.github.kr328.clash.R
+import com.github.kr328.clash.common.utils.componentName
 import com.github.kr328.clash.remote.Broadcasts
+import com.github.kr328.clash.service.RestartReceiver
 import com.github.kr328.clash.service.settings.ServiceSettings
-import com.github.kr328.clash.service.util.componentName
 
 class BehaviorFragment : BaseSettingFragment() {
     companion object {
@@ -40,7 +40,7 @@ class BehaviorFragment : BaseSettingFragment() {
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED
 
             requireActivity().packageManager.setComponentEnabledSetting(
-                OnBootReceiver::class.componentName,
+                RestartReceiver::class.componentName,
                 status,
                 PackageManager.DONT_KILL_APP
             )
@@ -48,7 +48,7 @@ class BehaviorFragment : BaseSettingFragment() {
 
         override fun get(): Any? {
             val status = requireActivity().packageManager
-                .getComponentEnabledSetting(OnBootReceiver::class.componentName)
+                .getComponentEnabledSetting(RestartReceiver::class.componentName)
 
             return status == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
         }

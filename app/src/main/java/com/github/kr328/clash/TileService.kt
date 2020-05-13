@@ -7,10 +7,11 @@ import android.content.IntentFilter
 import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import com.github.kr328.clash.common.Permissions
+import com.github.kr328.clash.common.ids.Intents
 import com.github.kr328.clash.remote.RemoteUtils
-import com.github.kr328.clash.service.Intents
-import com.github.kr328.clash.utils.startClashService
-import com.github.kr328.clash.utils.stopClashService
+import com.github.kr328.clash.service.util.startClashService
+import com.github.kr328.clash.service.util.stopClashService
 
 class TileService : TileService() {
     private var currentProfile = ""
@@ -84,7 +85,9 @@ class TileService : TileService() {
                 addAction(Intents.INTENT_ACTION_CLASH_STARTED)
                 addAction(Intents.INTENT_ACTION_CLASH_STOPPED)
                 addAction(Intents.INTENT_ACTION_PROFILE_LOADED)
-            }
+            },
+            Permissions.PERMISSION_RECEIVE_BROADCASTS,
+            null
         )
 
         val name = RemoteUtils.getCurrentClashProfileName(this)

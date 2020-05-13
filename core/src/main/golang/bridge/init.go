@@ -1,13 +1,12 @@
 package bridge
 
 import (
-	"sync"
-
 	"github.com/Dreamacro/clash/component/mmdb"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/tunnel"
-	"github.com/kr328/cfa/profile"
+	"github.com/kr328/cfa/config"
+	"sync"
 )
 
 var (
@@ -19,24 +18,22 @@ type LogCallback interface {
 	OnLogEvent(level, payload string)
 }
 
-func LoadMMDB(data []byte) {
-	dataClone := make([]byte, len(data))
-	copy(dataClone, data)
+func InitCore(geoipDatabase[] byte, homeDir string, version string) {
+	dataClone := make([]byte, len(geoipDatabase))
+	copy(dataClone, geoipDatabase)
 
 	mmdb.LoadFromBytes(dataClone)
-}
-
-func SetHome(homeDir string) {
 	C.SetHomeDir(homeDir)
+	config.ApplicationVersion = version
+
+	Reset()
+
+	log.Infoln("Initialed")
 }
 
 func Reset() {
-	profile.LoadDefault()
+	config.LoadDefault()
 	tunnel.DefaultManager.ResetStatistic()
-}
-
-func SetApplicationVersion(version string) {
-	profile.ApplicationVersion = version
 }
 
 func SetLogCallback(callback LogCallback) {

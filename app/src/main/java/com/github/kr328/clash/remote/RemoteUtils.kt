@@ -4,9 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.github.kr328.clash.ApkBrokenActivity
+import com.github.kr328.clash.common.utils.intent
 import com.github.kr328.clash.service.Constants
 import com.github.kr328.clash.service.ServiceStatusProvider
-import com.github.kr328.clash.service.util.intent
+import java.lang.Exception
 
 object RemoteUtils {
     fun detectClashRunning(context: Context): Boolean {
@@ -24,7 +25,7 @@ object RemoteUtils {
             )
 
             return pong != null
-        } catch (e: IllegalArgumentException) {
+        } catch (e: Exception) {
             context.startActivity(ApkBrokenActivity::class.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 
             return false
@@ -46,7 +47,7 @@ object RemoteUtils {
             )
 
             return pong?.getString("name")
-        } catch (e: IllegalArgumentException) {
+        } catch (e: Exception) {
             context.startActivity(ApkBrokenActivity::class.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 
             return null

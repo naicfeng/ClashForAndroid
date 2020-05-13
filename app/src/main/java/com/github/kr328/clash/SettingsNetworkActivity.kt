@@ -26,7 +26,4 @@ class SettingsNetworkActivity : BaseActivity() {
     override suspend fun onClashStarted() {
         recreate()
     }
-
-    override val activityLabel: CharSequence?
-        get() = getText(R.string.network)
 }

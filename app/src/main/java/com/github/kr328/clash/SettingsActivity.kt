@@ -1,7 +1,7 @@
 package com.github.kr328.clash
 
 import android.os.Bundle
-import com.github.kr328.clash.service.util.intent
+import com.github.kr328.clash.common.utils.intent
 import kotlinx.android.synthetic.main.activity_settings.*
 
 class SettingsActivity : BaseActivity() {
@@ -43,7 +43,4 @@ class SettingsActivity : BaseActivity() {
             }
         }
     }
-
-    override val activityLabel: CharSequence?
-        get() = getText(R.string.settings)
 }

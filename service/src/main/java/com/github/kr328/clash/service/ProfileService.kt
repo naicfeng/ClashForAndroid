@@ -3,103 +3,167 @@ package com.github.kr328.clash.service
 import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
-import androidx.core.content.FileProvider
-import com.github.kr328.clash.core.Global
-import com.github.kr328.clash.core.utils.Log
-import com.github.kr328.clash.service.data.ClashDatabase
-import com.github.kr328.clash.service.data.ClashProfileEntity
-import com.github.kr328.clash.service.ipc.IStreamCallback
-import com.github.kr328.clash.service.ipc.ParcelableContainer
-import com.github.kr328.clash.service.transact.ProfileRequest
-import com.github.kr328.clash.service.util.*
+import android.os.RemoteException
+import com.github.kr328.clash.service.data.ProfileDao
+import com.github.kr328.clash.service.model.Profile
+import com.github.kr328.clash.service.model.asProfile
+import com.github.kr328.clash.service.transact.IStreamCallback
+import com.github.kr328.clash.service.util.broadcastProfileChanged
+import com.github.kr328.clash.service.util.resolveBaseDir
+import com.github.kr328.clash.service.util.resolveProfileFile
+import com.github.kr328.clash.service.util.resolveTempProfileFile
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import java.util.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class ProfileService : BaseService() {
     private val service = this
-    private val queue: MutableMap<Long, Channel<ProfileRequest>> = Hashtable()
-    private val pending = mutableListOf<ProfileRequest>()
-
-    private val profiles = ClashDatabase.getInstance(Global.application).openClashProfileDao()
-    private val processor = ProfileProcessor(this)
+    private val lock = Mutex()
+    private val pending = mutableMapOf<Long, Profile>()
+    private val tasks = mutableMapOf<Long, IStreamCallback?>()
+    private val request = Channel<Unit>(Channel.CONFLATED)
 
     override fun onBind(intent: Intent?): IBinder? {
         return object : IProfileService.Stub() {
-            override fun enqueueRequest(request: ProfileRequest?) {
-                service.enqueueRequest(request ?: return)
-            }
-
-            override fun queryActiveProfile(): ClashProfileEntity? {
-                return runBlocking {
-                    profiles.queryActiveProfile()
-                }
-            }
-
-            override fun queryProfiles(): Array<ClashProfileEntity> {
-                return runBlocking {
-                    profiles.queryProfiles()
-                }
-            }
-
-            override fun setActiveProfile(id: Long) {
+            override fun setActive(id: Long) {
                 launch {
-                    profiles.setActiveProfile(id)
+                    ProfileDao.setActive(id)
 
-                    broadcastProfileChanged(service)
+                    service.broadcastProfileChanged()
                 }
             }
 
-            override fun requestProfileEditUri(id: Long): String? {
+            override fun commit(id: Long, callback: IStreamCallback?) {
+                launch {
+                    lock.withLock {
+                        tasks[id] = callback
+
+                        request.offer(Unit)
+                    }
+                }
+            }
+
+            override fun release(id: Long) {
+                launch {
+                    lock.withLock {
+                        pending.remove(id)
+                    }
+                }
+            }
+
+            override fun acquireUnused(type: String, source: String?): Long {
                 return runBlocking {
-                    val entity = profiles.queryProfileById(id) ?: return@runBlocking null
+                    lock.withLock {
+                        val id = generateNextId()
 
-                    val baseDir = cacheDir.resolve("profiles").apply { mkdirs() }
+                        pending[id] = Profile(
+                            id = id,
+                            name = "",
+                            type = Profile.Type.valueOf(type),
+                            uri = Uri.EMPTY,
+                            source = source,
+                            active = false,
+                            interval = 0,
+                            lastModified = 0
+                        )
 
-                    val fileName = RandomUtils.fileName(baseDir, ".yaml")
+                        service.resolveBaseDir(id).apply {
+                            deleteRecursively()
+                            mkdirs()
+                        }
 
-                    val file = resolveProfile(entity.id).copyTo(baseDir.resolve(fileName))
-
-                    val url = FileProvider.getUriForFile(
-                        service,
-                        "$packageName${Constants.PROFILE_PROVIDER_SUFFIX}",
-                        file
-                    ).toString()
-
-                    "$url?id=${entity.id}&fileName=$fileName"
+                        id
+                    }
                 }
             }
 
-            override fun commitProfileEditUri(uri: String?) {
-                val u = Uri.parse(uri)
+            override fun acquireCloned(id: Long): Long {
+                return runBlocking {
+                    val clonedId = generateNextId()
 
-                if (u == null || u == Uri.EMPTY)
-                    return
+                    pending[clonedId] =
+                        queryMetadataById(id)?.copy(
+                            id = clonedId,
+                            active = false,
+                            lastModified = 0,
+                            type = Profile.Type.FILE
+                        ) ?: return@runBlocking -1L
 
-                val id = u.getQueryParameter("id")?.toLongOrNull() ?: return
-                val fileName = u.getQueryParameter("fileName") ?: return
+                    clonedId
+                }
+            }
 
-                val request = ProfileRequest().action(ProfileRequest.Action.UPDATE_OR_CREATE)
-                    .withId(id)
-                    .withURL(u)
-                    .withCallback(object : IStreamCallback.Stub() {
-                        override fun complete() {
-                            cacheDir.resolve("profiles/$fileName").delete()
+            override fun queryActive(): Profile? {
+                return runBlocking {
+                    ProfileDao.queryActive()?.asProfile(service)
+                }
+            }
+
+            override fun delete(id: Long) {
+                launch {
+                    lock.withLock {
+                        if (pending.remove(id) != null)
+                            service.resolveBaseDir(id).deleteRecursively()
+                        ProfileDao.remove(id)
+                    }
+
+                    ProfileReceiver.cancelNextUpdate(service, id)
+
+                    service.resolveProfileFile(id).delete()
+                    service.resolveTempProfileFile(id).delete()
+                    service.resolveBaseDir(id).deleteRecursively()
+
+                    service.broadcastProfileChanged()
+                }
+            }
+
+            override fun clear(id: Long) {
+                launch {
+                    withContext(Dispatchers.IO) {
+                        resolveBaseDir(id).listFiles()?.forEach {
+                            it.deleteRecursively()
                         }
+                    }
 
-                        override fun completeExceptionally(reason: String?) {
-                            cacheDir.resolve("profiles/$fileName").delete()
-                        }
+                    service.broadcastProfileChanged()
+                }
+            }
 
-                        override fun send(data: ParcelableContainer?) {
+            override fun queryAll(): Array<Profile> {
+                return runBlocking {
+                    ProfileDao.queryAll().map { it.asProfile(service) }.toTypedArray()
+                }
+            }
 
-                        }
-                    })
-                val i = ProfileBackgroundService::class.intent
-                    .setAction(Intents.INTENT_ACTION_PROFILE_ENQUEUE_REQUEST)
-                    .putExtra(Intents.INTENT_EXTRA_PROFILE_REQUEST, request)
+            override fun queryById(id: Long): Profile? {
+                return runBlocking {
+                    lock.withLock {
+                        queryMetadataById(id)
+                    }
+                }
+            }
 
-                startForegroundServiceCompat(i)
+            override fun acquireTempUri(id: Long): String? {
+                val file = service.resolveProfileFile(id)
+                if ( !file.exists() )
+                    return null
+
+                val tempFile = service.resolveTempProfileFile(id)
+
+                tempFile.parentFile?.mkdirs()
+
+                file.copyTo(tempFile, overwrite = true)
+
+                return ProfileProvider.resolveUri(service, tempFile).toString()
+            }
+
+            override fun update(id: Long, metadata: Profile?) {
+                launch {
+                    lock.withLock {
+                        pending[id] = metadata ?: return@launch
+                    }
+                }
             }
         }
     }
@@ -107,112 +171,50 @@ class ProfileService : BaseService() {
     override fun onCreate() {
         super.onCreate()
 
-        Log.d("ProfileService.onCreate")
-    }
+        launch {
+            ProfileReceiver.initialize(service)
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        pending.forEach {
-            it.callback?.completeExceptionally("Canceled")
+            process()
         }
-
-        Log.d("ProfileService.onDestroy")
     }
 
-    private fun createChannelForRequests(id: Long): Channel<ProfileRequest> {
-        return Channel<ProfileRequest>(Channel.UNLIMITED).also {
-            launch {
-                try {
-                    Log.d("Coroutine for $id launched")
+    private suspend fun process() {
+        while (isActive) {
+            request.receive()
 
-                    while (isActive) {
-                        val request = withTimeout(1000 * 30) {
-                            it.receive()
-                        }
+            val ctx = lock.withLock {
+                tasks.entries.firstOrNull()?.also {
+                    tasks[it.key]
+                }
+            } ?: continue
 
-                        Log.d("Handling $id")
-                        handleRequest(request)
-                    }
-                } finally {
-                    Log.d("Coroutine for $id exited")
+            try {
+                val metadata = queryMetadataById(ctx.key)
+                    ?: throw RemoteException("No such profile")
 
-                    queue.remove(id)
+                ProfileProcessor.createOrUpdate(service, metadata)
+
+                ctx.value?.complete()
+
+                service.broadcastProfileChanged()
+            } catch (e: Exception) {
+                ctx.value?.completeExceptionally(e.message)
+            }
+            finally {
+                lock.withLock {
+                    tasks.remove(ctx.key)
                 }
             }
+
+            request.offer(Unit)
         }
     }
 
-    private fun enqueueRequest(request: ProfileRequest) {
-        Log.d("Request $request enqueue")
-
-        pending.add(request)
-
-        queue.computeIfAbsent(request.id) {
-            createChannelForRequests(it)
-        }.offer(request)
+    private suspend fun queryMetadataById(id: Long): Profile? {
+        return pending[id] ?: ProfileDao.queryById(id)?.asProfile(service)
     }
 
-    private suspend fun handleRequest(request: ProfileRequest) {
-        try {
-            request.callback?.send(null)
-
-            when (request.action) {
-                ProfileRequest.Action.UPDATE_OR_CREATE ->
-                    handleUpdateOrCreate(request)
-                ProfileRequest.Action.REMOVE ->
-                    removeProfile(request)
-                ProfileRequest.Action.CLEAR ->
-                    clearProfile(request)
-            }
-
-            request.callback?.complete()
-
-            broadcastProfileChanged(this)
-        } catch (e: Exception) {
-            Log.w("handleRequest", e)
-            request.callback?.completeExceptionally(e.message)
-        } finally {
-            pending.remove(request)
-        }
-    }
-
-    private suspend fun handleUpdateOrCreate(request: ProfileRequest) =
-        withContext(Dispatchers.IO) {
-            val id = request.id
-
-            val entity: ClashProfileEntity =
-                if (id == -1L) {
-                    ClashProfileEntity(
-                        requireNotNull(request.name),
-                        requireNotNull(request.type),
-                        requireNotNull(request.url).toString(),
-                        request.source?.toString(),
-                        false,
-                        0,
-                        request.interval.takeIf { it >= 0 } ?: 0,
-                        profiles.generateNewId()
-                    )
-                } else {
-                    val e = profiles.queryProfileById(id) ?: return@withContext
-
-                    e.copy(
-                        name = request.name ?: e.name,
-                        uri = request.url?.toString() ?: e.uri,
-                        updateInterval = request.interval.takeIf { it >= 0 } ?: e.updateInterval
-                    )
-                }
-
-            processor.createOrUpdate(entity, id == -1L)
-
-            UpdateUtils.resetProfileUpdateAlarm(service, entity)
-        }
-
-    private suspend fun removeProfile(request: ProfileRequest) = withContext(Dispatchers.IO) {
-        processor.remove(request.id)
-    }
-
-    private suspend fun clearProfile(request: ProfileRequest) = withContext(Dispatchers.IO) {
-        processor.clear(request.id)
+    private suspend fun generateNextId(): Long {
+        return (ProfileDao.queryAllIds() + pending.keys).max()?.plus(1) ?: 0
     }
 }

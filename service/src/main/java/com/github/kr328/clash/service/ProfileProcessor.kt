@@ -1,86 +1,97 @@
 package com.github.kr328.clash.service
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
-import androidx.core.content.FileProvider
+import android.webkit.URLUtil
+import com.github.kr328.clash.common.utils.Log
 import com.github.kr328.clash.core.Clash
-import com.github.kr328.clash.service.data.ClashDatabase
-import com.github.kr328.clash.service.data.ClashProfileEntity
-import com.github.kr328.clash.service.util.resolveBase
-import com.github.kr328.clash.service.util.resolveProfile
+import com.github.kr328.clash.service.data.ProfileDao
+import com.github.kr328.clash.service.model.Profile
+import com.github.kr328.clash.service.model.Profile.Type
+import com.github.kr328.clash.service.model.asEntity
+import com.github.kr328.clash.service.util.resolveBaseDir
+import com.github.kr328.clash.service.util.resolveProfileFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import java.lang.Exception
+import java.util.*
 
-class ProfileProcessor(private val context: Context) {
-    suspend fun createOrUpdate(entity: ClashProfileEntity, newRecord: Boolean) {
-        val database = ClashDatabase.getInstance(context).openClashProfileDao()
+object ProfileProcessor {
+    suspend fun createOrUpdate(context: Context, metadata: Profile) =
+        withContext(Dispatchers.IO) {
+            metadata.enforceFieldValid()
 
-        val uri = Uri.parse(entity.uri)
-        if (uri == null || uri == Uri.EMPTY)
-            throw IllegalArgumentException("Invalid uri $uri")
+            context.resolveBaseDir(metadata.id).mkdirs()
+            context.resolveProfileFile(metadata.id).parentFile?.mkdirs()
 
-        downloadProfile(
-            uri,
-            resolveProfile(entity.id),
-            resolveBase(entity.id),
-            newRecord
-        )
-
-        val newEntity = if (entity.type == ClashProfileEntity.TYPE_FILE)
-            entity.copy(
-                lastUpdate = System.currentTimeMillis(),
-                uri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}${Constants.PROFILE_PROVIDER_SUFFIX}",
-                    resolveProfile(entity.id)
-                ).toString()
+            downloadProfile(
+                context, metadata.uri,
+                context.resolveProfileFile(metadata.id),
+                context.resolveBaseDir(metadata.id)
             )
-        else
-            entity.copy(lastUpdate = System.currentTimeMillis())
 
-        if (newRecord)
-            database.addProfile(newEntity)
-        else
-            database.updateProfile(newEntity)
+            val entity = if (metadata.type == Type.FILE)
+                metadata.copy(
+                    uri = ProfileProvider.resolveUri(
+                        context,
+                        context.resolveProfileFile(metadata.id)
+                    )
+                ).asEntity()
+            else
+                metadata.asEntity()
+
+            if (ProfileDao.queryById(metadata.id) == null)
+                ProfileDao.insert(entity)
+            else
+                ProfileDao.update(entity)
+
+            ProfileReceiver.requestNextUpdate(context, metadata.id)
+        }
+
+    private suspend fun downloadProfile(
+        context: Context,
+        source: Uri,
+        target: File,
+        baseDir: File
+    ) = withContext(Dispatchers.IO) {
+        when (source.scheme?.toLowerCase(Locale.getDefault())) {
+            "http", "https" ->
+                Clash.downloadProfile(source.toString(), target, baseDir)
+            "content", "file", "resource" -> {
+                val fd = context.contentResolver.openFileDescriptor(source, "r")
+                    ?: throw FileNotFoundException("$source not found")
+                Clash.downloadProfile(fd.detachFd(), target, baseDir)
+            }
+            else -> throw IllegalArgumentException("Invalid uri type")
+        }.await()
     }
 
-    suspend fun remove(id: Long) {
-        val database = ClashDatabase.getInstance(context).openClashProfileDao()
-
-        resolveProfile(id).delete()
-        resolveBase(id).deleteRecursively()
-
-        database.removeProfile(id)
-    }
-
-    fun clear(id: Long) {
-        resolveBase(id).listFiles()?.forEach {
-            it.deleteRecursively()
+    private fun Profile.enforceFieldValid() {
+        when {
+            id < 0 ->
+                throw IllegalArgumentException("Invalid id")
+            name.isBlank() ->
+                throw IllegalArgumentException("Empty name")
+            type != Type.FILE && type != Type.URL && type != Type.EXTERNAL ->
+                throw IllegalArgumentException("Invalid type")
+            !URLUtil.isValidUrl(uri.toString()) ->
+                throw IllegalArgumentException("Invalid uri")
+            source?.isValidIntent() == false ->
+                throw IllegalArgumentException("Invalid source")
+            interval < 0 ->
+                throw IllegalArgumentException("Invalid interval")
         }
     }
 
-    private suspend fun downloadProfile(source: Uri, target: File, baseDir: File, newRecord: Boolean) {
-        try {
-            target.parentFile?.mkdirs()
-            baseDir.mkdirs()
-
-            if (source.scheme.equals("content", ignoreCase = true)
-                || source.scheme.equals("file", ignoreCase = true)) {
-                val parcelFileDescriptor = context.contentResolver.openFileDescriptor(source, "r")
-                    ?: throw FileNotFoundException("Unable to open file $source")
-
-                val fd = parcelFileDescriptor.detachFd()
-
-                Clash.downloadProfile(fd, target, baseDir).await()
-            } else {
-                Clash.downloadProfile(source.toString(), target, baseDir).await()
-            }
+    private fun String.isValidIntent(): Boolean {
+        return try {
+            Intent.parseUri(this, 0)
+            true
         } catch (e: Exception) {
-            if ( newRecord ) {
-                target.delete()
-                baseDir.deleteRecursively()
-            }
-            throw e
+            false
         }
     }
 }

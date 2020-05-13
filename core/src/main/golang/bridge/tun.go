@@ -20,17 +20,19 @@ func init() {
 	dialer.ListenConfigHook = onNewListenConfig
 }
 
-func onNewDialer(dialer *net.Dialer) {
+func onNewDialer(dialer *net.Dialer) error {
 	dialer.Control = onNewSocket
+	return nil
 }
 
-func onNewListenConfig(listen *net.ListenConfig) {
+func onNewListenConfig(listen *net.ListenConfig) error {
 	listen.Control = onNewSocket
+	return nil
 }
 
-func onNewSocket(network, address string, c syscall.RawConn) error {
+func onNewSocket(_, _ string, c syscall.RawConn) error {
 	if cb := callback; cb != nil {
-		c.Control(func(fd uintptr) {
+		_ = c.Control(func(fd uintptr) {
 			cb.OnCreateSocket(int(fd))
 		})
 	}
@@ -38,10 +40,10 @@ func onNewSocket(network, address string, c syscall.RawConn) error {
 	return nil
 }
 
-func StartTunDevice(fd, mtu int, dns string, cb TunCallback) error {
+func StartTunDevice(fd, mtu int, gateway, mirror, dns string, cb TunCallback) error {
 	callback = cb
 
-	return tun.StartTunDevice(fd, mtu, dns)
+	return tun.StartTunDevice(fd, mtu, gateway, mirror, dns)
 }
 
 func StopTunDevice() {

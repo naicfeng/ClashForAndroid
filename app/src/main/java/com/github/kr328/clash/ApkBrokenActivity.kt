@@ -65,7 +65,4 @@ class ApkBrokenActivity : BaseActivity() {
     override fun shouldDisplayHomeAsUpEnabled(): Boolean {
         return false
     }
-
-    override val activityLabel: CharSequence
-        get() = getText(R.string.application_broken)
 }

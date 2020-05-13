@@ -1,6 +1,6 @@
 package com.github.kr328.clash.settings
 
-import com.github.kr328.clash.service.settings.BaseSettings
+import com.github.kr328.clash.common.settings.BaseSettings
 import moe.shizuku.preference.PreferenceDataStore
 
 class SettingsDataStore : PreferenceDataStore() {

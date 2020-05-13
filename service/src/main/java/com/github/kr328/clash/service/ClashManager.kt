@@ -1,20 +1,18 @@
 package com.github.kr328.clash.service
 
-import android.content.Context
 import com.github.kr328.clash.core.Clash
 import com.github.kr328.clash.core.model.General
 import com.github.kr328.clash.core.model.ProxyGroupList
-import com.github.kr328.clash.service.data.ClashDatabase
-import com.github.kr328.clash.service.data.ClashProfileProxyEntity
-import com.github.kr328.clash.service.ipc.IStreamCallback
-import com.github.kr328.clash.service.ipc.ParcelableContainer
+import com.github.kr328.clash.service.data.ProfileDao
+import com.github.kr328.clash.service.data.SelectedProxyDao
+import com.github.kr328.clash.service.data.SelectedProxyEntity
+import com.github.kr328.clash.service.transact.IStreamCallback
+import com.github.kr328.clash.service.transact.ParcelableContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-class ClashManager(context: Context, parent: CoroutineScope) :
+class ClashManager(parent: CoroutineScope) :
     IClashManager.Stub(), CoroutineScope by parent {
-    private val settings = context.getSharedPreferences("service", Context.MODE_PRIVATE)
-    private val database = ClashDatabase.getInstance(context)
 
     override fun setProxyMode(mode: String?) {
         Clash.setProxyMode(requireNotNull(mode))
@@ -32,10 +30,9 @@ class ClashManager(context: Context, parent: CoroutineScope) :
         require(proxy != null && selected != null)
 
         launch {
-            val current = database.openClashProfileDao()
-                .queryActiveProfile() ?: return@launch
-            database.openClashProfileProxyDao()
-                .setSelectedForProfile(ClashProfileProxyEntity(current.id, proxy, selected))
+            val current = ProfileDao.queryActive() ?: return@launch
+
+            SelectedProxyDao.setSelectedForProfile(SelectedProxyEntity(current.id, proxy, selected))
         }
 
         return Clash.setSelectedProxy(proxy, selected)

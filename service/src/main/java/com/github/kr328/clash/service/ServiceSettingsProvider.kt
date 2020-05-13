@@ -15,11 +15,17 @@ class ServiceSettingsProvider : PreferenceProvider() {
 
     companion object {
         fun createSharedPreferencesFromContext(context: Context): SharedPreferences {
-            return when ( context ) {
+            return when (context) {
                 is BaseService, is TunService ->
-                    context.getSharedPreferences(Constants.SERVICE_SETTING_FILE_NAME, Context.MODE_PRIVATE)
+                    context.getSharedPreferences(
+                        Constants.SERVICE_SETTING_FILE_NAME,
+                        Context.MODE_PRIVATE
+                    )
                 else ->
-                    MultiProcessPreference(context, context.packageName + Constants.SETTING_PROVIDER_SUFFIX)
+                    MultiProcessPreference(
+                        context,
+                        context.packageName + Constants.SETTING_PROVIDER_SUFFIX
+                    )
             }
         }
     }

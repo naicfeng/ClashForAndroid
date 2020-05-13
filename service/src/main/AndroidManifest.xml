@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application>
         <service
@@ -12,8 +13,8 @@
         <service
             android:name="TunService"
             android:exported="false"
-            android:process=":background"
-            android:permission="android.permission.BIND_VPN_SERVICE">
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":background">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
@@ -31,14 +32,9 @@
             android:exported="false"
             android:process=":background" />
 
-        <receiver
-            android:name=".ProfileRequestReceiver"
-            android:exported="false"
-            android:process=":background" />
-
         <provider
+            android:name=".ProfileProvider"
             android:authorities="${applicationId}.profiles"
-            android:name="androidx.core.content.FileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -46,14 +42,40 @@
                 android:resource="@xml/profile_provider" />
         </provider>
         <provider
-            android:authorities="${applicationId}.status"
-            android:name=".ServiceStatusProvider"
-            android:exported="false"
-            android:process=":background"/>
+            android:name=".ProfileDocumentProvider"
+            android:authorities="${applicationId}.documents"
+            android:grantUriPermissions="true"
+            android:exported="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS"
+            android:process=":background">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
         <provider
-            android:authorities="${applicationId}.settings"
-            android:name=".ServiceSettingsProvider"
+            android:name=".ServiceStatusProvider"
+            android:authorities="${applicationId}.status"
             android:exported="false"
-            android:process=":background"/>
+            android:process=":background" />
+        <provider
+            android:name=".ServiceSettingsProvider"
+            android:authorities="${applicationId}.settings"
+            android:exported="false"
+            android:process=":background" />
+
+        <receiver
+            android:name=".ProfileReceiver"
+            android:exported="false"
+            android:process=":background"
+            android:permission="${applicationId}.permission.RECEIVE_BROADCASTS" />
+        <receiver
+            android:enabled="false"
+            android:name=".RestartReceiver"
+            android:process=":background">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

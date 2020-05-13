@@ -2,9 +2,8 @@ package com.github.kr328.clash.service.settings
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.github.kr328.clash.service.Constants
+import com.github.kr328.clash.common.settings.BaseSettings
 import com.github.kr328.clash.service.ServiceSettingsProvider
-import rikka.preference.MultiProcessPreference
 
 class ServiceSettings(preference: SharedPreferences) :
     BaseSettings(preference) {
@@ -17,10 +16,10 @@ class ServiceSettings(preference: SharedPreferences) :
         const val ACCESS_CONTROL_MODE_BLACKLIST = "access_control_mode_blacklist"
         const val ACCESS_CONTROL_MODE_WHITELIST = "access_control_mode_whitelist"
 
+        val ENABLE_VPN =
+            BooleanEntry("enable_vpn", true)
         val LANGUAGE =
             StringEntry("language", "")
-        val IPV6_SUPPORT =
-            BooleanEntry("ipv6_support", false)
         val BYPASS_PRIVATE_NETWORK =
             BooleanEntry("bypass_private_network", true)
         val ACCESS_CONTROL_MODE =

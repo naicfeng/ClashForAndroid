@@ -8,11 +8,6 @@
         android:defaultValue="true" />
     <PreferenceCategory android:title="@string/vpn_service" android:dependency="enable_vpn_service">
         <SwitchPreference
-            android:key="ipv6"
-            android:title="@string/ipv6"
-            android:summary="@string/enable_ipv6"
-            android:defaultValue="false"/>
-        <SwitchPreference
             android:key="bypass_private_network"
             android:title="@string/bypass_private_network"
             android:summary="@string/bypass_private_network_summary"

@@ -1,34 +1,37 @@
 package com.github.kr328.clash.dump
 
 object LogcatDumper {
-    fun dump(): List<String> {
+    fun dumpCrash(): String {
         return try {
             val process =
-                Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-s", "-v", "raw", "Go"))
+                Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-s", "Go", "AndroidRuntime", "DEBUG"))
 
-            val result = process.inputStream.bufferedReader().useLines {
-                var list = mutableListOf<String>()
-                var capture = false
-
-                it.forEach { line ->
-                    if (line.startsWith("panic")) {
-                        capture = true
-
-                        list = mutableListOf()
-                    }
-
-                    if (capture)
-                        list.add(line)
-                }
-
-                list
+            val result = process.inputStream.use {
+                it.reader().readText()
             }
 
             process.waitFor()
 
             result
         } catch (e: Exception) {
-            emptyList()
+            ""
+        }
+    }
+
+    fun dumpAll(): String {
+        return try {
+            val process =
+                Runtime.getRuntime().exec(arrayOf("logcat", "-d"))
+
+            val result = process.inputStream.use {
+                it.reader().readText()
+            }
+
+            process.waitFor()
+
+            result
+        } catch (e: Exception) {
+            ""
         }
     }
 }

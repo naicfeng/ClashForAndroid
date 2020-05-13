@@ -5,10 +5,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
-import com.github.kr328.clash.service.Intents
+import com.github.kr328.clash.common.Global
+import com.github.kr328.clash.common.Permissions
+import com.github.kr328.clash.common.ids.Intents
+import com.github.kr328.clash.common.utils.Log
+import com.github.kr328.clash.utils.ApplicationObserver
 
 object Broadcasts {
     interface Receiver {
@@ -62,36 +63,37 @@ object Broadcasts {
         receivers.remove(receiver)
     }
 
-    fun init(application: Application) {
-        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) {
-                application.registerReceiver(broadcastReceiver, IntentFilter().apply {
-                    addAction(Intents.INTENT_ACTION_PROFILE_CHANGED)
-                    addAction(Intents.INTENT_ACTION_CLASH_STOPPED)
-                    addAction(Intents.INTENT_ACTION_CLASH_STARTED)
-                    addAction(Intents.INTENT_ACTION_PROFILE_LOADED)
-                })
+    private val observer = ApplicationObserver {
+        Log.d("Global Broadcast Receiver State = $it")
 
+        if ( it ) {
+            Global.application.registerReceiver(broadcastReceiver, IntentFilter().apply {
+                addAction(Intents.INTENT_ACTION_PROFILE_CHANGED)
+                addAction(Intents.INTENT_ACTION_CLASH_STOPPED)
+                addAction(Intents.INTENT_ACTION_CLASH_STARTED)
+                addAction(Intents.INTENT_ACTION_PROFILE_LOADED)
+            }, Permissions.PERMISSION_RECEIVE_BROADCASTS, null)
 
-                val current = RemoteUtils.detectClashRunning(application)
-                if (current != clashRunning) {
-                    clashRunning = current
+            val current = RemoteUtils.detectClashRunning(Global.application)
+            if (current != clashRunning) {
+                clashRunning = current
 
-                    if (current) {
-                        receivers.forEach {
-                            it.onStarted()
-                        }
-                    } else {
-                        receivers.forEach {
-                            it.onStopped(null)
-                        }
+                if (current) {
+                    receivers.forEach { receiver ->
+                        receiver.onStarted()
+                    }
+                } else {
+                    receivers.forEach { receiver ->
+                        receiver.onStopped(null)
                     }
                 }
             }
+        } else {
+            Global.application.unregisterReceiver(broadcastReceiver)
+        }
+    }
 
-            override fun onStop(owner: LifecycleOwner) {
-                application.unregisterReceiver(broadcastReceiver)
-            }
-        })
+    fun init(application: Application) {
+        observer.register(application)
     }
 }

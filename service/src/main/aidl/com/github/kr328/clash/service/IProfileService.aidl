@@ -1,15 +1,21 @@
 package com.github.kr328.clash.service;
 
-import com.github.kr328.clash.service.transact.ProfileRequest;
-import com.github.kr328.clash.service.data.ClashProfileEntity;
+import com.github.kr328.clash.service.transact.IStreamCallback;
+import com.github.kr328.clash.service.model.Profile;
 
 interface IProfileService {
-    void enqueueRequest(in ProfileRequest request);
-    String requestProfileEditUri(long id);
-    void commitProfileEditUri(String uri);
+    long acquireUnused(String type, String source);
+    long acquireCloned(long id);
+    String acquireTempUri(long id);
+    void release(long id);
+    void update(long id, in Profile metadata);
+    void commit(long id, in IStreamCallback callback);
+    void delete(long id);
+    void clear(long id);
 
-    ClashProfileEntity[] queryProfiles();
-    ClashProfileEntity queryActiveProfile();
+    Profile queryById(long id);
+    Profile[] queryAll();
+    Profile queryActive();
 
-    void setActiveProfile(long id);
+    void setActive(long id);
 }

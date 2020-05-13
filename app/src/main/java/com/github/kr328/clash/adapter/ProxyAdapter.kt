@@ -66,8 +66,10 @@ class ProxyAdapter(
     private var renderList = mutableListOf<RenderInfo>()
     private var activeList: MutableMap<String, Int> = mutableMapOf()
     private var groupPosition: MutableMap<String, Int> = mutableMapOf()
+
     @ColorInt
     private val colorSurface: Int
+
     @ColorInt
     private val colorOnSurface: Int
 

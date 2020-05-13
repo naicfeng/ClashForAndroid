@@ -1,7 +1,7 @@
 package com.github.kr328.clash.preference
 
 import android.content.Context
-import com.github.kr328.clash.service.settings.BaseSettings
+import com.github.kr328.clash.common.settings.BaseSettings
 
 class UiSettings(context: Context) :
     BaseSettings(context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)) {
@@ -16,7 +16,6 @@ class UiSettings(context: Context) :
         const val DARK_MODE_DARK = "dark"
         const val DARK_MODE_LIGHT = "light"
 
-        val ENABLE_VPN = BooleanEntry("enable_vpn", true)
         val PROXY_GROUP_SORT = StringEntry("proxy_group_sort", PROXY_SORT_DEFAULT)
         val PROXY_PROXY_SORT = StringEntry("proxy_proxy_sort", PROXY_SORT_DEFAULT)
         val PROXY_LAST_SELECT_GROUP = StringEntry("proxy_last_select_group", "")

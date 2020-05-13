@@ -1,8 +1,8 @@
 package com.github.kr328.clash.core
 
-import android.content.Context
 import bridge.Bridge
 import bridge.TunCallback
+import com.github.kr328.clash.common.Global
 import com.github.kr328.clash.core.event.LogEvent
 import com.github.kr328.clash.core.model.General
 import com.github.kr328.clash.core.model.Proxy
@@ -18,20 +18,13 @@ import java.io.InputStream
 object Clash {
     private val logReceivers = mutableMapOf<String, (LogEvent) -> Unit>()
 
-    private var initialized = false
-
-    @Synchronized
-    fun initialize(context: Context) {
-        if (initialized)
-            return
-        initialized = true
+    init {
+        val context = Global.application
 
         val bytes = context.assets.open("Country.mmdb")
             .use(InputStream::readBytes)
 
-        Bridge.loadMMDB(bytes)
-        Bridge.setHome(context.cacheDir.absolutePath)
-        Bridge.setApplicationVersion(BuildConfig.VERSION_NAME)
+        Bridge.initCore(bytes, context.cacheDir.absolutePath, BuildConfig.VERSION_NAME)
         Bridge.reset()
     }
 
@@ -46,11 +39,13 @@ object Clash {
     fun startTunDevice(
         fd: Int,
         mtu: Int,
+        gateway: String,
+        mirror: String,
         dns: String,
         onNewSocket: (Int) -> Boolean,
         onTunStop: () -> Unit
     ) {
-        Bridge.startTunDevice(fd.toLong(), mtu.toLong(), dns, object : TunCallback {
+        Bridge.startTunDevice(fd.toLong(), mtu.toLong(), gateway, mirror, dns, object: TunCallback {
             override fun onCreateSocket(fd: Long) {
                 onNewSocket(fd.toInt())
             }

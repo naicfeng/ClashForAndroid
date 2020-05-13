@@ -13,9 +13,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.github.kr328.clash.common.utils.createLanguageConfigurationContext
 import com.github.kr328.clash.preference.UiSettings
 import com.github.kr328.clash.remote.Broadcasts
-import com.github.kr328.clash.service.util.createLanguageConfigurationContext
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -109,6 +109,8 @@ abstract class BaseActivity : AppCompatActivity(), CoroutineScope by MainScope()
         resetDarkMode()
 
         resetLightNavigationBar()
+
+        title = resolveActivityTitle()
     }
 
     override fun onStart() {
@@ -148,18 +150,12 @@ abstract class BaseActivity : AppCompatActivity(), CoroutineScope by MainScope()
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(shouldDisplayHomeAsUpEnabled())
-
-            activityLabel?.let {
-                title = it
-            }
         }
     }
 
     open fun shouldDisplayHomeAsUpEnabled(): Boolean {
         return true
     }
-
-    abstract val activityLabel: CharSequence?
 
     override fun onSupportNavigateUp(): Boolean {
         this.onBackPressed()
@@ -179,7 +175,7 @@ abstract class BaseActivity : AppCompatActivity(), CoroutineScope by MainScope()
         recreate()
     }
 
-    protected fun makeSnackbarException(title: String, detail: String?) {
+    protected fun showSnackbarException(title: String, detail: String?) {
         Snackbar.make(rootView, title, Snackbar.LENGTH_LONG).setAction(R.string.detail) {
             AlertDialog.Builder(this).setTitle(R.string.detail).setMessage(detail ?: "Unknown")
                 .show()
@@ -212,5 +208,14 @@ abstract class BaseActivity : AppCompatActivity(), CoroutineScope by MainScope()
         }
 
         window.navigationBarColor = getColor(R.color.backgroundColor)
+    }
+
+    private fun resolveActivityTitle(): CharSequence {
+        val info = packageManager.getActivityInfo(componentName, 0)
+
+        if (info.labelRes <= 0)
+            return title
+
+        return resources.getText(info.labelRes)
     }
 }
