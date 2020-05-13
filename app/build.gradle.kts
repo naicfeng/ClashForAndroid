@@ -66,7 +66,7 @@ android {
         }
     }
 
-    val signingFile = rootProject.file("keystore.properties")
+    val signingFile = rootProject.file("key2.jks")
     if ( signingFile.exists() ) {
         val properties = Properties().apply {
             signingFile.inputStream().use {
@@ -75,10 +75,10 @@ android {
         }
         signingConfigs {
             maybeCreate("release").apply {
-                storeFile = rootProject.file(Objects.requireNonNull(properties.getProperty("storeFile")))
-                storePassword = Objects.requireNonNull(properties.getProperty("storePassword"))
-                keyAlias = Objects.requireNonNull(properties.getProperty("keyAlias"))
-                keyPassword = Objects.requireNonNull(properties.getProperty("keyPassword"))
+                storeFile = rootProject.file('key2.jks')
+                storePassword = "$System.env.KEYSTORE_PWD"
+                keyAlias = "clashr"
+                keyPassword = "$System.env.KEY_PWD"
             }
         }
         buildTypes {
