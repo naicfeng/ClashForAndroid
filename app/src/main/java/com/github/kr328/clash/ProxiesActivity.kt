@@ -161,9 +161,6 @@ class ProxiesActivity : BaseActivity(), ScrollBinding.Callback {
         return true
     }
 
-    override val activityLabel: CharSequence?
-        get() = getText(R.string.proxy)
-
     override suspend fun onClashStopped(reason: String?) {
         finish()
     }

@@ -11,11 +11,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.kr328.clash.adapter.LogFileAdapter
+import com.github.kr328.clash.common.utils.intent
+import com.github.kr328.clash.common.utils.startForegroundServiceCompat
+import com.github.kr328.clash.core.event.LogEvent
 import com.github.kr328.clash.design.common.Category
 import com.github.kr328.clash.design.view.CommonUiLayout
 import com.github.kr328.clash.model.LogFile
-import com.github.kr328.clash.service.util.intent
-import com.github.kr328.clash.service.util.startForegroundServiceCompat
 import com.github.kr328.clash.utils.format
 import com.github.kr328.clash.utils.logsDir
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -24,12 +25,15 @@ import kotlinx.android.synthetic.main.activity_logs.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.FileInputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 class LogsActivity : BaseActivity() {
     companion object {
         const val REQUEST_CODE = 50000
+
+        private val LOG_EXPORT_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+        private val LOG_EXPORT_TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
     }
 
     private var lastWriteFile: LogFile? = null
@@ -92,9 +96,6 @@ class LogsActivity : BaseActivity() {
         refreshList()
     }
 
-    override val activityLabel: CharSequence
-        get() = getText(R.string.logs)
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
@@ -105,9 +106,31 @@ class LogsActivity : BaseActivity() {
 
                 launch {
                     withContext(Dispatchers.IO) {
-                        contentResolver.openOutputStream(url)?.use { output ->
-                            FileInputStream(logsDir.resolve(file.fileName)).use { input ->
-                                input.copyTo(output)
+                        contentResolver.openOutputStream(url)?.bufferedWriter()?.use { output ->
+                            output.write("# Logcat on " + LOG_EXPORT_DATE_FORMAT.format(Date(file.date)) + "\n")
+
+                            logsDir.resolve(file.fileName).bufferedReader().useLines { lines ->
+                                lines.map { it.trim() }
+                                    .filter { it.isNotEmpty() && !it.startsWith("#") }
+                                    .map { it.split(" ", limit = 3) }
+                                    .filter { it.size == 3 }
+                                    .map {
+                                        LogEvent(
+                                            LogEvent.Level.valueOf(it[1]),
+                                            it[2],
+                                            it[0].toLong()
+                                        )
+                                    }
+                                    .forEach {
+                                        output.write(
+                                            String.format(
+                                                "%s |%s| %s\n",
+                                                LOG_EXPORT_TIME_FORMAT.format(Date(it.time)),
+                                                it.level.toString(),
+                                                it.message
+                                            )
+                                        )
+                                    }
                             }
                         }
                     }
@@ -186,6 +209,7 @@ class LogsActivity : BaseActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         }
+
         @ColorInt
         val errorColor = TypedValue().run {
             theme.resolveAttribute(R.attr.colorError, this, true)

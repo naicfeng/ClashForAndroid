@@ -15,8 +15,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlin.streams.toList
 
 class PackagesActivity : BaseActivity() {
-    override val activityLabel: CharSequence?
-        get() = getText(R.string.access_control_packages)
     private val activity: PackagesActivity
         get() = this
     private val adapter: PackagesAdapter?

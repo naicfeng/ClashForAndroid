@@ -3,15 +3,13 @@ package com.github.kr328.clash.settings
 import android.os.Bundle
 import com.github.kr328.clash.PackagesActivity
 import com.github.kr328.clash.R
-import com.github.kr328.clash.preference.UiSettings
+import com.github.kr328.clash.common.utils.intent
 import com.github.kr328.clash.remote.Broadcasts
 import com.github.kr328.clash.service.settings.ServiceSettings
-import com.github.kr328.clash.service.util.intent
 
 class NetworkFragment : BaseSettingFragment() {
     companion object {
         private const val KEY_ENABLE_VPN_SERVICE = "enable_vpn_service"
-        private const val KEY_IPV6 = "ipv6"
         private const val BYPASS_PRIVATE_NETWORK = "bypass_private_network"
         private const val KEY_DNS_HIJACKING = "dns_hijacking"
         private const val KEY_DNS_OVERRIDE = "dns_override"
@@ -33,8 +31,7 @@ class NetworkFragment : BaseSettingFragment() {
 
     override fun onCreateDataStore(): SettingsDataStore {
         return SettingsDataStore().apply {
-            on(KEY_ENABLE_VPN_SERVICE, UiSettings.ENABLE_VPN.asSource(ui))
-            on(KEY_IPV6, ServiceSettings.IPV6_SUPPORT.asSource(service))
+            on(KEY_ENABLE_VPN_SERVICE, ServiceSettings.ENABLE_VPN.asSource(service))
             on(BYPASS_PRIVATE_NETWORK, ServiceSettings.BYPASS_PRIVATE_NETWORK.asSource(service))
             on(KEY_DNS_HIJACKING, ServiceSettings.DNS_HIJACKING.asSource(service))
             on(KEY_DNS_OVERRIDE, ServiceSettings.OVERRIDE_DNS.asSource(service))

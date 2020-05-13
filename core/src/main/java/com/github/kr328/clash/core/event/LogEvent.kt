@@ -2,15 +2,16 @@ package com.github.kr328.clash.core.event
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.github.kr328.clash.core.serialization.Parcels
+import com.github.kr328.clash.common.serialization.Parcels
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Suppress("UNUSED")
 data class LogEvent(
     val level: Level,
     val message: String,
     val time: Long = System.currentTimeMillis()
-) : Event {
+) : Parcelable {
     companion object {
         const val DEBUG_VALUE = "debug"
         const val INFO_VALUE = "info"

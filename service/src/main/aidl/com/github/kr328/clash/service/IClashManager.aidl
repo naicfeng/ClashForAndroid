@@ -1,7 +1,6 @@
 package com.github.kr328.clash.service;
 
-import com.github.kr328.clash.service.ipc.IStreamCallback;
-import com.github.kr328.clash.service.data.ClashProfileEntity;
+import com.github.kr328.clash.service.transact.IStreamCallback;
 import com.github.kr328.clash.core.model.Packet;
 
 interface IClashManager {

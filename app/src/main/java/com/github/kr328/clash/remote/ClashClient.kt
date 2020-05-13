@@ -4,8 +4,8 @@ import android.os.RemoteException
 import com.github.kr328.clash.core.model.General
 import com.github.kr328.clash.core.model.ProxyGroup
 import com.github.kr328.clash.service.IClashManager
-import com.github.kr328.clash.service.ipc.IStreamCallback
-import com.github.kr328.clash.service.ipc.ParcelableContainer
+import com.github.kr328.clash.service.transact.IStreamCallback
+import com.github.kr328.clash.service.transact.ParcelableContainer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

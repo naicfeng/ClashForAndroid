@@ -3,40 +3,40 @@ package bridge
 import (
 	"strings"
 
-	"github.com/kr328/cfa/profile"
+	"github.com/kr328/cfa/config"
 )
 
 func ResetDnsAppend(dns string) {
 	if len(dns) == 0 {
-		profile.NameServersAppend = make([]string, 0)
+		config.NameServersAppend = make([]string, 0)
 	} else {
-		profile.NameServersAppend = strings.Split(dns, ",")
+		config.NameServersAppend = strings.Split(dns, ",")
 	}
 }
 
 func SetDnsOverrideEnabled(enabled bool) {
 	if enabled {
-		profile.DnsPatch = profile.OptionalDnsPatch
+		config.DnsPatch = config.OptionalDnsPatch
 	} else {
-		profile.DnsPatch = nil
+		config.DnsPatch = nil
 	}
 }
 
 func LoadProfileFile(path, baseDir string, callback DoneCallback) {
 	go func() {
-		call(profile.LoadFromFile(path, baseDir), callback)
+		call(config.LoadFromFile(path, baseDir), callback)
 	}()
 }
 
 func DownloadProfileAndCheck(url, output, baseDir string, callback DoneCallback) {
 	go func() {
-		call(profile.DownloadAndCheck(url, output, baseDir), callback)
+		call(config.PullRemote(url, output, baseDir), callback)
 	}()
 }
 
 func ReadProfileAndCheck(fd int, output, baseDir string, callback DoneCallback) {
 	go func() {
-		call(profile.ReadAndCheck(fd, output, baseDir), callback)
+		call(config.PullLocal(fd, output, baseDir), callback)
 	}()
 }
 

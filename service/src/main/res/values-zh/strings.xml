@@ -11,4 +11,10 @@
     <string name="processing_profiles">正在处理配置文件</string>
     <string name="recycling_resources">正在回收资源</string>
     <string name="destroying">销毁中</string>
+    <string name="clash_for_android">Clash for Android</string>
+    <string name="profiles_and_providers">配置文件和外部引用</string>
+    <string name="profile_yaml">配置文件.yaml</string>
+    <string name="provider_files">外部引用文件</string>
+    <string name="waiting">等待中</string>
+    <string name="loading">载入中</string>
 </resources>

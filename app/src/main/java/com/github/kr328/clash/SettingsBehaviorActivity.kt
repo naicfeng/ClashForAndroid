@@ -14,7 +14,4 @@ class SettingsBehaviorActivity : BaseActivity() {
             .replace(R.id.fragment, BehaviorFragment())
             .commit()
     }
-
-    override val activityLabel: CharSequence?
-        get() = getText(R.string.behavior)
 }

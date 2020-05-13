@@ -16,8 +16,12 @@
             android:background="@color/toolbarColor" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.github.kr328.clash.design.view.CommonUiLayout
-        android:id="@+id/commonUi"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+        <com.github.kr328.clash.design.view.CommonUiLayout
+            android:id="@+id/commonUi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </ScrollView>
 </LinearLayout>

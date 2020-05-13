@@ -25,9 +25,9 @@ class CommonUiBuilder(val screen: CommonUiScreen) {
         textInput.id = id
         textInput.dependOn = dependOn?.run { screen.requireElement(this) }
 
-        setup(textInput)
-
         screen.addElement(textInput)
+
+        textInput.setup()
     }
 
     fun option(
@@ -73,7 +73,7 @@ class CommonUiBuilder(val screen: CommonUiScreen) {
     fun tips(
         title: String = "",
         icon: Drawable? = null,
-        setup: Tips.() -> Unit
+        setup: Tips.() -> Unit = {}
     ) {
         val tips = Tips(screen)
 

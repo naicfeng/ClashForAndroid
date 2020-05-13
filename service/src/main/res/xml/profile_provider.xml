@@ -5,5 +5,5 @@
         path="profiles/" />
     <cache-path
         name="export_profiles"
-        path="profiles/"/>
+        path="profiles/" />
 </paths>

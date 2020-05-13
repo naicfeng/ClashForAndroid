@@ -53,25 +53,17 @@ func StartUrlTest(group string, callback DoneCallback) {
 
 		p := tunnel.Proxies()[group]
 
-		pa, ok := p.(*outbound.Proxy)
+		pi, ok := p.(*outbound.Proxy)
 		if !ok {
 			return
 		}
 
-		var providers []provider.ProxyProvider
-
-		switch group := pa.ProxyAdapter.(type) {
-		case *outboundgroup.Fallback:
-			providers = group.GetProviders()
-		case *outboundgroup.URLTest:
-			providers = group.GetProviders()
-		case *outboundgroup.LoadBalance:
-			providers = group.GetProviders()
-		case *outboundgroup.Selector:
-			providers = group.GetProviders()
-		default:
+		group, ok := pi.ProxyAdapter.(outboundgroup.ProxyGroup)
+		if !ok {
 			return
 		}
+
+		providers := group.GetProxyProviders()
 
 		wg := &sync.WaitGroup{}
 		wg.Add(len(providers))
@@ -91,76 +83,63 @@ func QueryAllProxyGroups(collection ProxyGroupCollection) {
 	ps := tunnel.Proxies()
 
 	for _, p := range ps {
-		pa, ok := p.(*outbound.Proxy)
+		pi, ok := p.(*outbound.Proxy)
 		if !ok {
 			continue
 		}
 
-		switch group := pa.ProxyAdapter.(type) {
-		case *outboundgroup.Fallback:
-			collection.Add(
-				&ProxyGroupItem{
-					Name:      group.Name(),
-					Type:      group.Type().String(),
-					Current:   group.Now(),
-					Delay:     int(p.LastDelay()),
-					providers: group.GetProviders(),
-				},
-			)
-		case *outboundgroup.URLTest:
-			collection.Add(
-				&ProxyGroupItem{
-					Name:      group.Name(),
-					Type:      group.Type().String(),
-					Current:   group.Now(),
-					Delay:     int(p.LastDelay()),
-					providers: group.GetProviders(),
-				},
-			)
-		case *outboundgroup.LoadBalance:
-			collection.Add(
-				&ProxyGroupItem{
-					Name:      group.Name(),
-					Type:      group.Type().String(),
-					Current:   "",
-					Delay:     int(p.LastDelay()),
-					providers: group.GetProviders(),
-				},
-			)
-		case *outboundgroup.Selector:
-			collection.Add(
-				&ProxyGroupItem{
-					Name:      group.Name(),
-					Type:      group.Type().String(),
-					Current:   group.Now(),
-					Delay:     int(p.LastDelay()),
-					providers: group.GetProviders(),
-				},
-			)
-		default:
+		group, ok := pi.ProxyAdapter.(outboundgroup.ProxyGroup)
+		if !ok {
 			continue
 		}
+
+		collection.Add(&ProxyGroupItem{
+			Name:      group.Name(),
+			Type:      group.Type().String(),
+			Current:   group.Now(),
+			Delay:     0,
+			providers: group.GetProxyProviders(),
+		})
 	}
 }
 
 func SetSelectedProxy(name, proxy string) bool {
 	p := tunnel.Proxies()[name]
 	if p == nil {
+		log.Infoln("Set %s: Not such proxy group", name)
 		return false
 	}
 
 	pb, ok := p.(*outbound.Proxy)
 	if !ok {
+		log.Infoln("Set %s: Not a proxy object", name)
 		return false
 	}
 
 	selector, ok := pb.ProxyAdapter.(*outboundgroup.Selector)
 	if !ok {
+		log.Infoln("Set %s: Not a selector group", name)
 		return false
 	}
 
+	selected := selector.Now()
+	if selected == proxy {
+		log.Infoln("Set " + name + " -> " + proxy)
+		return true
+	}
+
 	if err := selector.Set(proxy); err != nil {
+		log.Infoln("Set %s: %s", name, err.Error())
 		return false
+	}
+
+	for _, conn := range tunnel.DefaultManager.Snapshot().Connections {
+		for _, p := range conn.Chain() {
+			if p == name {
+				_ = conn.Close()
+				break
+			}
+		}
 	}
 
 	log.Infoln("Set " + name + " -> " + proxy)

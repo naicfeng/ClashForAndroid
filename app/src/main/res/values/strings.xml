@@ -25,7 +25,6 @@
 
     <string name="recently">Recently</string>
 
-    <string name="format_seconds">%d seconds</string>
     <string name="format_minutes">%d minutes</string>
     <string name="format_hours">%d hours</string>
     <string name="format_days">%d days</string>
@@ -46,8 +45,8 @@
     <string name="profile_name">Profile Name</string>
     <string name="profile_url">Profile URL</string>
 
-    <string name="auto_update">Auto Update (Seconds)</string>
-    <string name="seconds">Seconds</string>
+    <string name="auto_update">Auto Update (Minutes)</string>
+    <string name="more_than_15_minutes">More than 15 minutes</string>
     <string name="invalid_interval">Invalid Interval</string>
     <string name="download_failure">Download Failure</string>
     <string name="detail">Detail</string>
@@ -66,12 +65,13 @@
     <string name="empty_name">Empty Name</string>
     <string name="invalid_url">Invalid URL</string>
     <string name="processing">Processing</string>
+    <string name="loading">Loading</string>
 
     <string name="new_profile">New Profile</string>
+    <string name="clone_profile">Clone Profile</string>
     <string name="edit_profile">Edit Profile</string>
     <string name="clash_start_failure">Clash Start Failure</string>
     <string name="refresh">Refresh</string>
-    <string name="copied">Copied</string>
 
     <string name="delay">Delay</string>
     <string name="direct">Direct</string>
@@ -107,20 +107,18 @@
     <string name="network">Network</string>
     <string name="interface_">Interface</string>
 
-    <string name="boot">Boot</string>
-    <string name="start_on_boot">Start on Boot</string>
-    <string name="start_clash_on_system_boot">Start Clash on system boot</string>
+    <string name="restart">Restart</string>
+    <string name="auto_restart">Auto Restart</string>
+    <string name="allow_clash_auto_restart">Allow clash auto restart</string>
 
     <string name="notification">Notification</string>
     <string name="show_traffic">Show Traffic</string>
     <string name="show_traffic_summary">Auto refresh traffic in notification</string>
 
     <string name="route_system_traffic">Route System Traffic</string>
-    <string name="routing_via_vpn_service">Routing all system traffic via VpnService</string>
+    <string name="routing_via_vpn_service">Auto routing all system traffic via VpnService</string>
 
     <string name="vpn_service">VPN Service</string>
-    <string name="ipv6">IPv6</string>
-    <string name="enable_ipv6">Enable IPv6 support (not recommend)</string>
     <string name="bypass_private_network">Bypass Private Network</string>
     <string name="bypass_private_network_summary">Bypass private network addresses</string>
     <string name="dns_hijacking">DNS Hijacking</string>
@@ -156,17 +154,18 @@
     <string name="clash_for_android_url" translatable="false">https://github.com/Kr328/ClashForAndroid</string>
     <string name="clashr_for_android_url" translatable="false">https://github.com/naicfeng/ClashRForAndroid</string>
 
-    <string name="contacts">Contacts</string>
-    <string name="email">E-Mail</string>
+    <string name="feedback">Feedback</string>
+    <string name="donate">Donate</string>
     <string name="github_issues">Github Issues</string>
     <string name="telegram_channel">Telegram Channel</string>
-    <string name="email_url" translatable="false">kr328app@outlook.com</string>
     <string name="github_issues_url" translatable="false">https://github.com/Kr328/ClashForAndroid/issues</string>
     <string name="telegram_channel_url" translatable="false">https://t.me/clash_for_android_channel</string>
     <string name="mod_clashr_text">Change to ClashR</string>
     <string name="mod_clashr_url" translatable="false">https://cuojue.org</string>
 
     <string name="tips_profile"><![CDATA[Accept Only <strong>Clash/ClashR Config</strong> which contains <br /><strong>Proxies, Proxy Groups and Rules</strong>]]></string>
+
+    <string name="tips_support"><![CDATA[ClashR for Android is <strong>free</strong> and <strong>open source</strong> <br /> It does <strong>NOT</strong> provide any proxy services]]></string>
 
     <string name="application_broken_description"><![CDATA[This is usually because you used a copy from <strong>Google Play</strong>, but the app that generated the copy did not handle <strong>Split Apks</strong> correctly <br />This means you get <strong>part of the app</strong>, not all of it]]></string>
     <string name="learn_more_about_split_apks">Learn more about Split Apks</string>
@@ -179,4 +178,11 @@
 
     <string name="format_proxy_group_title" translatable="false">%s - %s</string>
     <string name="missing_vpn_component">Missing VPN Components</string>
+
+    <string name="profile_not_found">Profile not found</string>
+
+    <string name="upload_logcat">Upload Logcat</string>
+    <string name="upload_logcat_summary">Upload logcat to help us detect issues</string>
+    <string name="upload_logcat_warn">Please note that the uploaded logs may contain personally sensitive information, do you still want to continue?</string>
+    <string name="uploaded">Uploaded</string>
 </resources>
