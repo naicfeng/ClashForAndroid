@@ -41,10 +41,10 @@ fun generateGolangBuildEnvironment(vararg pathAppend: String): Map<String, Strin
     val environment = TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER).apply { putAll(System.getenv()) }
     val properties = Properties().apply { load(rootProject.file("local.properties").inputStream()) }
 
-    val sdkPath = properties.getProperty("sdk.dir")
-        ?: throw GradleScriptException("sdk.dir not found", FileNotFoundException())
-    val ndkPath = properties.getProperty("ndk.dir")
-        ?: throw GradleScriptException("ndk.dir not found", FileNotFoundException())
+//    val sdkPath = properties.getProperty("sdk.dir")
+//        ?: throw GradleScriptException("sdk.dir not found", FileNotFoundException())
+//    val ndkPath = properties.getProperty("ndk.dir")
+//        ?: throw GradleScriptException("ndk.dir not found", FileNotFoundException())
 
     val pathSeparator = if ( Os.isFamily(Os.FAMILY_WINDOWS) ) ";" else ":"
 
