@@ -50,8 +50,8 @@ fun generateGolangBuildEnvironment(vararg pathAppend: String): Map<String, Strin
 
     environment["GOPATH"] = listOf(buildDir.resolve(Constants.GOLANG_PATH).absolutePath, *pathAppend)
         .joinToString(separator = pathSeparator)
-    environment["ANDROID_HOME"] = sdkPath
-    environment["ANDROID_NDK_HOME"] = ndkPath
+//    environment["ANDROID_HOME"] = sdkPath
+//    environment["ANDROID_NDK_HOME"] = ndkPath
     environment["PATH"] += "$pathSeparator${buildDir.resolve(Constants.GOLANG_BINARY)}"
 
     return environment
