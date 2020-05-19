@@ -10,11 +10,11 @@ buildscript {
         this["gMinSdkVersion"] = 24
         this["gTargetSdkVersion"] = 29
 
-        this["gVersionCode"] = 102131
-        this["gVersionName"] = "1.2.13R"
+        this["gVersionCode"] = 10214
+        this["gVersionName"] = "1.2.14R"
 
         this["gKotlinVersion"] = kotlinVersion
-        this["gKotlinCoroutineVersion"] = "1.3.5"
+        this["gKotlinCoroutineVersion"] = "1.3.6"
         this["gKotlinSerializationVersion"] = "0.20.0"
         this["gRoomVersion"] = "2.2.5"
         this["gAppCenterVersion"] = "2.5.1"
@@ -30,7 +30,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:4.0.0-beta05")
+        classpath("com.android.tools.build:gradle:4.0.0-rc01")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
     }
