@@ -22,7 +22,7 @@ buildscript {
         this["gRecyclerviewVersion"] = "1.1.0"
         this["gAppCompatVersion"] = "1.1.0"
         this["gMaterialDesignVersion"] = "1.1.0"
-        this["gShizukuPreferenceVersion"] = "4.2.0"
+        this["gShizukuPreferenceVersion"] = "4.2.0-alpha03"
         this["gMultiprocessPreferenceVersion"] = "1.0.0"
     }
     repositories {
@@ -30,7 +30,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:4.0.0-rc01")
+        classpath("com.android.tools.build:gradle:4.1.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
     }
@@ -40,7 +40,9 @@ allprojects {
     repositories {
         google()
         jcenter()
-
+        maven {
+            url = java.net.URI("https://dl.bintray.com/rikkaw/MaterialPreference")
+        }
         maven {
             url = java.net.URI("https://dl.bintray.com/rikkaw/Libraries")
         }
