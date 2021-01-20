@@ -61,7 +61,7 @@ class DynamicNotificationModule(private val service: Service) : Module() {
     }
 
     override suspend fun onTick() {
-        val traffic = Clash.queryTraffic()
+        val traffic = Clash.querySpeed()
         val bandwidth = Clash.queryBandwidth()
 
         val uploading = traffic.upload.asSpeedString()

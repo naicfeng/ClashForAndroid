@@ -78,7 +78,7 @@ func fetchLocal(fd int) ([]byte, error) {
 	return ioutil.ReadAll(file)
 }
 
-func PullRemote(url, output, baseDir string) error {
+func DownloadUrl(url, output, baseDir string) error {
 	data, err := fetchRemote(url)
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func PullRemote(url, output, baseDir string) error {
 	return save(data, output, baseDir)
 }
 
-func PullLocal(fd int, output, baseDir string) error {
+func DownloadFd(fd int, output, baseDir string) error {
 	data, err := fetchLocal(fd)
 	if err != nil {
 		return err

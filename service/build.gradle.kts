@@ -6,23 +6,21 @@ plugins {
     id("kotlinx-serialization")
 }
 
-val rootExtra = rootProject.extra
+val gCompileSdkVersion: String by project
+val gBuildToolsVersion: String by project
 
-val gCompileSdkVersion: Int by rootExtra
-val gBuildToolsVersion: String by rootExtra
+val gMinSdkVersion: String by project
+val gTargetSdkVersion: String by project
 
-val gMinSdkVersion: Int by rootExtra
-val gTargetSdkVersion: Int by rootExtra
+val gVersionCode: String by project
+val gVersionName: String by project
 
-val gVersionCode: Int by rootExtra
-val gVersionName: String by rootExtra
-
-val gKotlinVersion: String by rootExtra
-val gKotlinCoroutineVersion: String by rootExtra
-val gKotlinSerializationVersion: String by rootExtra
-val gRoomVersion: String by rootExtra
-val gAndroidKtxVersion: String by rootExtra
-val gMultiprocessPreferenceVersion: String by rootExtra
+val gKotlinVersion: String by project
+val gKotlinCoroutineVersion: String by project
+val gKotlinSerializationVersion: String by project
+val gRoomVersion: String by project
+val gAndroidKtxVersion: String by project
+val gMultiprocessPreferenceVersion: String by project
 
 android {
     compileSdkVersion(gCompileSdkVersion)
@@ -32,14 +30,14 @@ android {
         minSdkVersion(gMinSdkVersion)
         targetSdkVersion(gTargetSdkVersion)
 
-        versionCode = gVersionCode
+        versionCode = gVersionCode.toInt()
         versionName = gVersionName
 
         consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
-        maybeCreate("release").apply {
+        named("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -66,6 +64,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$gKotlinSerializationVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$gKotlinVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$gKotlinCoroutineVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$gKotlinCoroutineVersion")
     implementation("androidx.room:room-runtime:$gRoomVersion")
     implementation("androidx.room:room-ktx:$gRoomVersion")
     implementation("androidx.core:core-ktx:$gAndroidKtxVersion")

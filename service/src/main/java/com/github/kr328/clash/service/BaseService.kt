@@ -5,10 +5,10 @@ import android.content.Context
 import com.github.kr328.clash.common.utils.createLanguageConfigurationContext
 import com.github.kr328.clash.service.settings.ServiceSettings
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 
-abstract class BaseService : Service(), CoroutineScope by MainScope() {
+abstract class BaseService : Service(), CoroutineScope by CoroutineScope(Dispatchers.Default) {
     lateinit var settings: ServiceSettings
 
     override fun attachBaseContext(base: Context?) {

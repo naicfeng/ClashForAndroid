@@ -1,19 +1,17 @@
 package com.github.kr328.clash.core
 
-import bridge.Bridge
-import bridge.TunCallback
+import android.os.ParcelFileDescriptor
 import com.github.kr328.clash.common.Global
+import com.github.kr328.clash.common.utils.Log
+import com.github.kr328.clash.core.bridge.Bridge
+import com.github.kr328.clash.core.bridge.TunCallback
 import com.github.kr328.clash.core.event.LogEvent
 import com.github.kr328.clash.core.model.General
-import com.github.kr328.clash.core.model.Proxy
 import com.github.kr328.clash.core.model.ProxyGroup
 import com.github.kr328.clash.core.model.Traffic
-import com.github.kr328.clash.core.transact.DoneCallbackImpl
-import com.github.kr328.clash.core.transact.ProxyCollectionImpl
-import com.github.kr328.clash.core.transact.ProxyGroupCollectionImpl
-import kotlinx.coroutines.CompletableDeferred
 import java.io.File
 import java.io.InputStream
+import java.util.concurrent.CompletableFuture
 
 object Clash {
     private val logReceivers = mutableMapOf<String, (LogEvent) -> Unit>()
@@ -24,8 +22,16 @@ object Clash {
         val bytes = context.assets.open("Country.mmdb")
             .use(InputStream::readBytes)
 
-        Bridge.initCore(bytes, context.cacheDir.absolutePath, BuildConfig.VERSION_NAME)
+        Bridge.initialize(bytes, context.cacheDir.absolutePath, BuildConfig.VERSION_NAME)
         Bridge.reset()
+
+        Bridge.setLogCallback {
+            synchronized(logReceivers) {
+                logReceivers.forEach { (_, e) -> e(it) }
+            }
+        }
+
+        Log.i("Clash core initialized")
     }
 
     fun start() {
@@ -45,11 +51,10 @@ object Clash {
         onNewSocket: (Int) -> Boolean,
         onTunStop: () -> Unit
     ) {
-        Bridge.startTunDevice(fd.toLong(), mtu.toLong(), gateway, mirror, dns, object: TunCallback {
-            override fun onCreateSocket(fd: Long) {
-                onNewSocket(fd.toInt())
+        Bridge.startTunDevice(fd, mtu, gateway, mirror, dns, object: TunCallback {
+            override fun onNewSocket(socket: Int) {
+                onNewSocket(socket)
             }
-
             override fun onStop() {
                 onTunStop()
             }
@@ -60,56 +65,32 @@ object Clash {
         Bridge.stopTunDevice()
     }
 
-    fun appendDns(dns: List<String>) {
-        Bridge.resetDnsAppend(dns.joinToString(","))
+    fun setDnsOverride(dnsOverride: Boolean, appendNameservers: List<String>) {
+        Bridge.setDnsOverride(dnsOverride, appendNameservers.joinToString(","))
     }
 
-    fun setDnsOverrideEnabled(enabled: Boolean) {
-        Bridge.setDnsOverrideEnabled(enabled)
+    fun loadProfile(path: File, baseDir: File): CompletableFuture<Unit> {
+        return Bridge.loadProfile(path.absolutePath, baseDir.absolutePath).thenApply { Unit }
     }
 
-    fun loadProfile(path: File, baseDir: File): CompletableDeferred<Unit> {
-        return DoneCallbackImpl().apply {
-            Bridge.loadProfileFile(path.absolutePath, baseDir.absolutePath, this)
-        }
+    fun downloadProfile(url: String, output: File, baseDir: File): CompletableFuture<Unit> {
+        return Bridge.downloadProfile(url, baseDir.absolutePath, output.absolutePath).thenApply { Unit }
     }
 
-    fun downloadProfile(url: String, output: File, baseDir: File): CompletableDeferred<Unit> {
-        return DoneCallbackImpl().apply {
-            Bridge.downloadProfileAndCheck(url, output.absolutePath, baseDir.absolutePath, this)
-        }
-    }
-
-    fun downloadProfile(fd: Int, output: File, baseDir: File): CompletableDeferred<Unit> {
-        return DoneCallbackImpl().apply {
-            Bridge.readProfileAndCheck(fd.toLong(), output.absolutePath, baseDir.absolutePath, this)
-        }
+    fun downloadProfile(fd: ParcelFileDescriptor, output: File, baseDir: File): CompletableFuture<Unit> {
+        return Bridge.downloadProfile(fd.detachFd(), baseDir.absolutePath, output.absolutePath).thenApply { Unit }
     }
 
     fun queryProxyGroups(): List<ProxyGroup> {
-        return ProxyGroupCollectionImpl().also { Bridge.queryAllProxyGroups(it) }
-            .filterNotNull()
-            .map { group ->
-                ProxyGroup(group.name,
-                    Proxy.Type.fromString(group.type),
-                    group.delay,
-                    group.current,
-                    ProxyCollectionImpl().also { pc ->
-                        group.queryAllProxies(pc)
-                    }.filterNotNull().map {
-                        Proxy(it.name, Proxy.Type.fromString(it.type), it.delay)
-                    })
-            }
+        return Bridge.queryProxyGroups().toList()
     }
 
-    fun setSelectedProxy(name: String, selected: String): Boolean {
-        return Bridge.setSelectedProxy(name, selected)
+    fun setSelector(name: String, selected: String): Boolean {
+        return Bridge.setSelector(name, selected)
     }
 
-    fun startHealthCheck(name: String): CompletableDeferred<Unit> {
-        return DoneCallbackImpl().apply {
-            Bridge.startUrlTest(name, this)
-        }
+    fun performHealthCheck(group: String): CompletableFuture<Unit> {
+        return Bridge.performHealthCheck(group).thenApply { Unit }
     }
 
     fun setProxyMode(mode: String) {
@@ -117,48 +98,30 @@ object Clash {
     }
 
     fun queryGeneral(): General {
-        val t = Bridge.queryGeneral()
-
-        return General(
-            General.Mode.fromString(t.mode),
-            t.httpPort.toInt(), t.socksPort.toInt(), t.redirectPort.toInt()
-        )
+        return Bridge.queryGeneral()
     }
 
-    fun queryTraffic(): Traffic {
-        val data = Bridge.queryTraffic()
-
-        return Traffic(data.upload, data.download)
+    fun querySpeed(): Traffic {
+        return Bridge.querySpeed()
     }
 
     fun queryBandwidth(): Traffic {
-        val data = Bridge.queryBandwidth()
-
-        return Traffic(data.upload, data.download)
+        return Bridge.queryBandwidth()
     }
 
     fun registerLogReceiver(key: String, receiver: (LogEvent) -> Unit) {
         synchronized(logReceivers) {
+            if ( logReceivers.isEmpty() )
+                Bridge.enableLogReport()
             logReceivers[key] = receiver
-
-            Bridge.setLogCallback(this::onLogEvent)
         }
     }
 
     fun unregisterLogReceiver(key: String) {
         synchronized(logReceivers) {
             logReceivers.remove(key)
-
-            if (logReceivers.isEmpty())
-                Bridge.setLogCallback(null)
-        }
-    }
-
-    private fun onLogEvent(level: String, payload: String) {
-        synchronized(logReceivers) {
-            logReceivers.forEach {
-                it.value(LogEvent(LogEvent.Level.fromString(level), payload))
-            }
+            if ( logReceivers.isEmpty() )
+                Bridge.disableLogReport();
         }
     }
 }

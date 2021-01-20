@@ -5,12 +5,12 @@ import com.github.kr328.clash.core.model.Packet;
 
 interface IClashManager {
     // Control
-    boolean setSelectProxy(String proxy, String selected);
-    void startHealthCheck(String group, IStreamCallback callback);
+    void setSelector(String group, String selected);
+    void performHealthCheck(String group, IStreamCallback callback);
     void setProxyMode(String mode);
 
     // Query
-    ProxyGroupList queryAllProxies();
+    ProxyGroupWrapper queryProxyGroups();
     General queryGeneral();
     long queryBandwidth();
 

@@ -1,3 +1,5 @@
 package com.github.kr328.clash.core.model
 
-data class Traffic(val upload: Long, val download: Long)
+import androidx.annotation.Keep
+
+data class Traffic @Keep constructor(val upload: Long, val download: Long)

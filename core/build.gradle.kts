@@ -1,4 +1,4 @@
-apply(from = "clash.gradle.kts")
+import android.databinding.tool.ext.toCamelCase
 
 plugins {
     id("com.android.library")
@@ -7,23 +7,26 @@ plugins {
     id("kotlinx-serialization")
 }
 
-val rootExtra = rootProject.extra
+apply(from = "clash.gradle.kts")
 
-val gCompileSdkVersion: Int by rootExtra
-val gBuildToolsVersion: String by rootExtra
+val gCompileSdkVersion: String by project
+val gBuildToolsVersion: String by project
 
-val gMinSdkVersion: Int by rootExtra
-val gTargetSdkVersion: Int by rootExtra
+val gMinSdkVersion: String by project
+val gTargetSdkVersion: String by project
 
-val gVersionCode: Int by rootExtra
-val gVersionName: String by rootExtra
+val gVersionCode: String by project
+val gVersionName: String by project
 
-val gKotlinVersion: String by rootExtra
-val gKotlinCoroutineVersion: String by rootExtra
-val gKotlinSerializationVersion: String by rootExtra
-val gAndroidKtxVersion: String by rootExtra
+val gKotlinVersion: String by project
+val gKotlinCoroutineVersion: String by project
+val gKotlinSerializationVersion: String by project
+val gAndroidKtxVersion: String by project
 
-val clashCoreOutput = buildDir.resolve("extraSources")
+val geoipOutput = buildDir.resolve("outputs/geoip")
+val golangSource = file("src/main/golang")
+val golangOutput = buildDir.resolve("outputs/golang")
+val nativeAbis = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 android {
     compileSdkVersion(gCompileSdkVersion)
@@ -33,24 +36,30 @@ android {
         minSdkVersion(gMinSdkVersion)
         targetSdkVersion(gTargetSdkVersion)
 
-        versionCode = gVersionCode
+        versionCode = gVersionCode.toInt()
         versionName = gVersionName
 
         consumerProguardFiles("consumer-rules.pro")
+
+        externalNativeBuild {
+            cmake {
+                abiFilters(*nativeAbis.toTypedArray())
+                arguments("-DCLASH_OUTPUT=$golangOutput", "-DCLASH_SOURCE=$golangSource")
+            }
+        }
     }
 
     buildTypes {
-        maybeCreate("release").apply {
+        named("release") {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
     sourceSets {
-        maybeCreate("main").apply {
-            assets.srcDir(clashCoreOutput.resolve("assets"))
-            jniLibs.srcDir(clashCoreOutput.resolve("jniLibs"))
-            java.srcDir(clashCoreOutput.resolve("classes"))
+        named("main") {
+            assets.srcDir(geoipOutput)
+            jniLibs.srcDir(golangOutput)
         }
     }
 
@@ -61,6 +70,12 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
     }
 }
 
@@ -77,6 +92,10 @@ repositories {
 }
 
 afterEvaluate {
-    tasks["clean"].dependsOn(tasks["resetGolangPathMode"])
-    tasks["preBuild"].dependsOn(tasks["extractSources"], tasks["downloadGeoipDatabase"])
+    android.buildTypes.forEach {
+        val cName = it.name.toCamelCase()
+
+        tasks["externalNativeBuild${cName}"].dependsOn(tasks["compileClashCore"])
+        tasks["package${cName}Assets"].dependsOn(tasks["downloadGeoipDatabase"])
+    }
 }

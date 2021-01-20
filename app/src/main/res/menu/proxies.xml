@@ -15,7 +15,6 @@
             <group android:checkableBehavior="single">
                 <item android:id="@+id/groupDefault" android:title="@string/default_" />
                 <item android:id="@+id/groupName" android:title="@string/name" />
-                <item android:id="@+id/groupDelay" android:title="@string/delay" />
             </group>
         </menu>
     </item>

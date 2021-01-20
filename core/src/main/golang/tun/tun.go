@@ -24,7 +24,7 @@ const (
 var adapter *tun2socket.Tun2Socket
 var mutex sync.Mutex
 
-func StartTunDevice(fd, mtu int, gateway, mirror, dnsAddress string) error {
+func StartTunDevice(fd, mtu int, gateway, mirror, dnsAddress string, onStop func()) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -60,6 +60,8 @@ func StartTunDevice(fd, mtu int, gateway, mirror, dnsAddress string) error {
 	adapter.SetLogger(&ClashLogger{})
 	adapter.SetClosedHandler(func() {
 		StopTunDevice()
+
+		onStop()
 	})
 	adapter.SetAllocator(func(length int) []byte {
 		if length <= maxUdpPacketSize {

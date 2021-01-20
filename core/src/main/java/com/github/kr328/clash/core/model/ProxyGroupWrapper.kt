@@ -6,7 +6,7 @@ import com.github.kr328.clash.common.serialization.MergedParcels
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ProxyGroupList(val list: List<ProxyGroup>) : Parcelable {
+data class ProxyGroupWrapper(val list: List<ProxyGroup>) : Parcelable {
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         MergedParcels.dump(serializer(), this, parcel)
     }
@@ -15,12 +15,12 @@ data class ProxyGroupList(val list: List<ProxyGroup>) : Parcelable {
         return 0
     }
 
-    companion object CREATOR : Parcelable.Creator<ProxyGroupList> {
-        override fun createFromParcel(parcel: Parcel): ProxyGroupList {
+    companion object CREATOR : Parcelable.Creator<ProxyGroupWrapper> {
+        override fun createFromParcel(parcel: Parcel): ProxyGroupWrapper {
             return MergedParcels.load(serializer(), parcel)
         }
 
-        override fun newArray(size: Int): Array<ProxyGroupList?> {
+        override fun newArray(size: Int): Array<ProxyGroupWrapper?> {
             return arrayOfNulls(size)
         }
     }

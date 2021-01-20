@@ -11,13 +11,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class ClashClient(val service: IClashManager) {
-    suspend fun setSelectProxy(name: String, proxy: String): Boolean = withContext(Dispatchers.IO) {
-        service.setSelectProxy(name, proxy)
+    suspend fun setSelector(group: String, selected: String) = withContext(Dispatchers.IO) {
+        service.setSelector(group, selected)
     }
 
     suspend fun startHealthCheck(group: String) = withContext(Dispatchers.IO) {
         CompletableDeferred<Unit>().apply {
-            service.startHealthCheck(group, object : IStreamCallback.Stub() {
+            service.performHealthCheck(group, object : IStreamCallback.Stub() {
                 override fun complete() {
                     this@apply.complete(Unit)
                 }
@@ -31,8 +31,8 @@ class ClashClient(val service: IClashManager) {
         }
     }.await()
 
-    suspend fun queryAllProxyGroups(): List<ProxyGroup> = withContext(Dispatchers.IO) {
-        service.queryAllProxies().list
+    suspend fun queryProxyGroups(): List<ProxyGroup> = withContext(Dispatchers.IO) {
+        service.queryProxyGroups().list
     }
 
     suspend fun queryGeneral(): General = withContext(Dispatchers.IO) {
