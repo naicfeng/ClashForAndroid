@@ -24,10 +24,9 @@ class ProxySorter(private val groupOrder: Order, private val proxyOrder: Order) 
 
             val sortedGroup = when (groupOrder) {
                 Order.DEFAULT -> groupSortWithDefault(global, other)
-                Order.DELAY_INCREASE -> groupSortWithDelay(true, other)
-                Order.DELAY_DECREASE -> groupSortWithDelay(false, other)
                 Order.NAME_INCREASE -> groupSortWithName(true, other)
                 Order.NAME_DECREASE -> groupSortWithName(false, other)
+                else -> groupSortWithDefault(global, other)
             }
 
             val sorted = if (global == null)
@@ -71,16 +70,6 @@ class ProxySorter(private val groupOrder: Order, private val proxyOrder: Order) 
             proxyGroup.sortedBy { it.name }
         else
             proxyGroup.sortedByDescending { it.name }
-    }
-
-    private fun groupSortWithDelay(
-        increase: Boolean,
-        proxyGroup: List<ProxyGroup>
-    ): List<ProxyGroup> {
-        return if (increase)
-            proxyGroup.sortedBy { it.delay }
-        else
-            proxyGroup.sortedByDescending { it.delay }
     }
 
     private fun proxySortWithName(

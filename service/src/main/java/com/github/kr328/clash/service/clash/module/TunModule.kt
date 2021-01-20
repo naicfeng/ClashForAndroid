@@ -9,7 +9,6 @@ import com.github.kr328.clash.core.Clash
 import com.github.kr328.clash.service.util.parseCIDR
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.lang.NullPointerException
 
 class TunModule(private val service: VpnService) : Module() {
     interface Configure {

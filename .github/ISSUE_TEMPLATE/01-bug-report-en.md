@@ -43,9 +43,15 @@ If applicable, add screenshots to help explain your problem.
 **Additional context**
 Add any other context about the problem here.
 
-<!--
-*Logs*
-if applicable, upload logs to help detect problem
+**Configure**
+If applicable, paste **removed server info** configure
+```yaml
+# paste here
+```
 
-`Open App` -> `Support` -> `Feedback` -> `Upload Logcat`
--->
+**Logs**
+If applicable, paste logs to help detect problem
+
+```
+<paste here>
+```

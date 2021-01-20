@@ -14,5 +14,7 @@
         <item>自动</item>
         <item>英文</item>
         <item>简体中文</item>
+        <item>繁体中文-香港</item>
+        <item>繁体中文-台湾</item>
     </string-array>
 </resources>

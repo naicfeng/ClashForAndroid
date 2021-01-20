@@ -14,6 +14,8 @@
         <item>Auto</item>
         <item>English</item>
         <item>Simplified Chinese</item>
+        <item>Traditional Chinese-Hong Kong</item>
+        <item>Traditional Chinese-Taiwan</item>
     </string-array>
 
     <string-array name="dark_mode_value" translatable="false">
@@ -30,5 +32,7 @@
         <item />
         <item>en</item>
         <item>zh-rCN</item>
+        <item>zh-rHK</item>
+        <item>zh-rTW</item>
     </string-array>
 </resources>

@@ -119,11 +119,6 @@ class ProxiesActivity : BaseActivity(), ScrollBinding.Callback {
                         put(UiSettings.PROXY_GROUP_SORT, UiSettings.PROXY_SORT_NAME)
                     }
                 }
-                R.id.groupDelay -> {
-                    uiSettings.commit {
-                        put(UiSettings.PROXY_GROUP_SORT, UiSettings.PROXY_SORT_DELAY)
-                    }
-                }
                 R.id.proxyDefault -> {
                     uiSettings.commit {
                         put(UiSettings.PROXY_PROXY_SORT, UiSettings.PROXY_SORT_DEFAULT)
@@ -186,7 +181,7 @@ class ProxiesActivity : BaseActivity(), ScrollBinding.Callback {
                     UiSettings.PROXY_SORT_NAME ->
                         findItem(R.id.groupName).isChecked = true
                     UiSettings.PROXY_SORT_DELAY ->
-                        findItem(R.id.proxyDelay).isChecked = true
+                        findItem(R.id.proxyDefault).isChecked = true
                 }
                 when (uiSettings.get(UiSettings.PROXY_PROXY_SORT)) {
                     UiSettings.PROXY_SORT_DEFAULT ->
@@ -206,7 +201,7 @@ class ProxiesActivity : BaseActivity(), ScrollBinding.Callback {
     private fun setGroupSelected(group: String, select: String) {
         launch {
             withClash {
-                setSelectProxy(group, select)
+                setSelector(group, select)
             }
         }
     }
@@ -240,7 +235,7 @@ class ProxiesActivity : BaseActivity(), ScrollBinding.Callback {
                 queryGeneral()
             }
             val proxies = withClash {
-                queryAllProxyGroups()
+                queryProxyGroups()
             }
 
             val merged = Pipeline(proxies, uiSettings).mergePrefix()

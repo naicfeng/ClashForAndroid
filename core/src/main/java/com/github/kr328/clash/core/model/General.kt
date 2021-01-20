@@ -2,11 +2,16 @@ package com.github.kr328.clash.core.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.annotation.Keep
 import com.github.kr328.clash.common.serialization.Parcels
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
 
 @Serializable
-data class General(val mode: Mode, val http: Int, val socks: Int, val redirect: Int) : Parcelable {
+data class General(val mode: Mode, val http: Int, val socks: Int, val redirect: Int, val mixed: Int) : Parcelable {
+    @Keep
+    constructor(mode: String, http: Int, socks: Int, redirect: Int, mixed: Int) :
+            this(Mode.fromString(mode), http, socks, redirect, mixed)
+
     @Serializable
     enum class Mode(val string: String) {
         DIRECT("Direct"), GLOBAL("Global"), RULE("Rule");

@@ -190,7 +190,7 @@ object Remote {
             val sources =
                 info.splitSourceDirs ?: arrayOf(info.sourceDir) ?: return false
 
-            val regexNativeLibrary = Regex("lib/(\\S+)/libgojni.so")
+            val regexNativeLibrary = Regex("lib/(\\S+)/libclash.so")
             val availableAbi = Build.SUPPORTED_ABIS.toSet()
             val apkAbi =
                 sources

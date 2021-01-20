@@ -1,5 +1,4 @@
 import java.util.*
-import java.security.*
 
 plugins {
     id("com.android.application")
@@ -7,26 +6,24 @@ plugins {
     id("kotlin-android-extensions")
 }
 
-val rootExtra = rootProject.extra
+val gCompileSdkVersion: String by project
+val gBuildToolsVersion: String by project
 
-val gCompileSdkVersion: Int by rootExtra
-val gBuildToolsVersion: String by rootExtra
+val gMinSdkVersion: String by project
+val gTargetSdkVersion: String by project
 
-val gMinSdkVersion: Int by rootExtra
-val gTargetSdkVersion: Int by rootExtra
+val gVersionCode: String by project
+val gVersionName: String by project
 
-val gVersionCode: Int by rootExtra
-val gVersionName: String by rootExtra
-
-val gKotlinVersion: String by rootExtra
-val gKotlinCoroutineVersion: String by rootExtra
-val gAppCenterVersion: String by rootExtra
-val gAndroidKtxVersion: String by rootExtra
-val gRecyclerviewVersion: String by rootExtra
-val gAppCompatVersion: String by rootExtra
-val gMaterialDesignVersion: String by rootExtra
-val gShizukuPreferenceVersion: String by rootExtra
-val gMultiprocessPreferenceVersion: String by rootExtra
+val gKotlinVersion: String by project
+val gKotlinCoroutineVersion: String by project
+val gAppCenterVersion: String by project
+val gAndroidKtxVersion: String by project
+val gRecyclerviewVersion: String by project
+val gAppCompatVersion: String by project
+val gMaterialDesignVersion: String by project
+val gShizukuPreferenceVersion: String by project
+val gMultiprocessPreferenceVersion: String by project
 
 android {
     compileSdkVersion(gCompileSdkVersion)
@@ -38,12 +35,12 @@ android {
         minSdkVersion(gMinSdkVersion)
         targetSdkVersion(gTargetSdkVersion)
 
-        versionCode = gVersionCode
+        versionCode = gVersionCode.toInt()
         versionName = gVersionName
     }
 
     buildTypes {
-        maybeCreate("release").apply {
+        named("release") {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -74,7 +71,7 @@ android {
             }
         }
         signingConfigs {
-            maybeCreate("release").apply {
+            named("release") {
                 storeFile = rootProject.file(Objects.requireNonNull(properties.getProperty("storeFile")))
                 storePassword = System.getenv("KEYSTORE_PWD")
                 keyAlias = Objects.requireNonNull(properties.getProperty("keyAlias"))
@@ -82,7 +79,7 @@ android {
             }
         }
         buildTypes {
-            maybeCreate("release").apply {
+            named("release") {
                 this.signingConfig = signingConfigs.findByName("release")
             }
         }

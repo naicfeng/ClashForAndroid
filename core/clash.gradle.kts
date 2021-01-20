@@ -2,85 +2,111 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import java.io.*
 import java.util.*
 import java.net.*
+import java.time.*
 
-object Constants {
-    const val GEOIP_DATABASE_URL = "https://github.com/Dreamacro/maxmind-geoip/releases/latest/download/Country.mmdb"
-    const val GEOIP_INVALID_INTERVAL = 1000L * 60 * 60 * 24 * 7
+val gMinSdkVersion: String by project
 
-    const val SOURCE_PATH = "src/main/golang"
-    const val OUTPUT_PATH = "extraSources"
+val geoipDatabaseUrl = "https://github.com/Dreamacro/maxmind-geoip/releases/latest/download/Country.mmdb"
+val geoipInvalidate = Duration.ofDays(7)
+val geoipOutput = buildDir.resolve("outputs/geoip")
+val golangSource = file("src/main/golang")
+val golangOutput = buildDir.resolve("outputs/golang")
+val nativeAbis = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
-    const val GOLANG_BASE = "intermediates/golang"
-    const val GOLANG_PATH = "$GOLANG_BASE/path"
-    const val GOLANG_BIND = "$GOLANG_BASE/bind"
-    const val GOLANG_BINARY = "$GOLANG_PATH/bin"
-    const val GOLANG_OUTPUT = "$GOLANG_BASE/bridge.aar"
-    const val GOLANG_OUTPUT_SOURCES = "$GOLANG_BASE/bridge-sources.jar"
 
-    val STUB_GO_FILE_CONTENT = """
-        package main
+val String.exe: String
+    get() {
+        return if ( Os.isFamily(Os.FAMILY_WINDOWS) )
+            "$this.exe"
+        else
+            this
+    }
 
-        import "github.com/kr328/cfa/bridge"
-            
-        func main() {}
-    """.trimIndent()
-    val STUB_GO_MOD_CONTENT = """
-        module github.com/kr328/cfa-bind
-        
-        require github.com/kr328/cfa v0.0.0 // redirect
-        
-        replace github.com/kr328/cfa => {SOURCE_PATH}
-        
-    """.trimIndent()
+fun generateGolangBuildEnvironment(abi: String): Map<String, String> {
+    val properties = Properties().apply {
+        load(FileInputStream(rootProject.file("local.properties")))
+    }
 
-    val REGEX_REPLACE = Regex("replace\\s+(\\S+)\\s+(\\S*)\\s*=>\\s*(\\S+)\\s*(\\S*)\\s*")
-    val REGEX_JNI = Regex("^jni/")
-}
+    val ndk = properties.getProperty("ndk.dir")
+        ?: throw GradleScriptException("ndk.dir not found in local.properties",
+            FileNotFoundException("ndk.dir not found in local.properties"))
 
-fun generateGolangBuildEnvironment(vararg pathAppend: String): Map<String, String> {
-    val environment = TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER).apply { putAll(System.getenv()) }
-    val properties = Properties().apply { load(rootProject.file("local.properties").inputStream()) }
+    val host = when {
+        Os.isFamily(Os.FAMILY_WINDOWS) ->
+            "windows"
+        Os.isFamily(Os.FAMILY_MAC) ->
+            "darwin"
+        Os.isFamily(Os.FAMILY_UNIX) ->
+            "linux"
+        else ->
+            throw GradleScriptException("Unsupported host", FileNotFoundException("Unsupported host"))
+    }
 
-//    val sdkPath = properties.getProperty("sdk.dir")
-//        ?: throw GradleScriptException("sdk.dir not found", FileNotFoundException())
-//    val ndkPath = properties.getProperty("ndk.dir")
-//        ?: throw GradleScriptException("ndk.dir not found", FileNotFoundException())
+    val minSdkVersion = gMinSdkVersion.removePrefix("android-")
 
-    val pathSeparator = if ( Os.isFamily(Os.FAMILY_WINDOWS) ) ";" else ":"
+    val compilerBase = rootProject.file(ndk).resolve("toolchains/llvm/prebuilt/$host-x86_64/bin")
 
-    environment["GOPATH"] = listOf(buildDir.resolve(Constants.GOLANG_PATH).absolutePath, *pathAppend)
-        .joinToString(separator = pathSeparator)
-//    environment["ANDROID_HOME"] = sdkPath
-//    environment["ANDROID_NDK_HOME"] = ndkPath
-    environment["PATH"] += "$pathSeparator${buildDir.resolve(Constants.GOLANG_BINARY)}"
+    val cCompiler = when(abi) {
+        "armeabi-v7a" ->
+            "armv7a-linux-androideabi$minSdkVersion-clang"
+        "arm64-v8a" ->
+            "aarch64-linux-android$minSdkVersion-clang"
+        "x86" ->
+            "i686-linux-android$minSdkVersion-clang"
+        "x86_64" ->
+            "x86_64-linux-android$minSdkVersion-clang"
+        else ->
+            throw GradleScriptException("Unsupported abi $abi", FileNotFoundException("Unsupported abi $abi"))
+    }
 
-    return environment
-}
+    val cppCompiler = when(abi) {
+        "armeabi-v7a" ->
+            "armv7a-linux-androideabi$minSdkVersion-clang++"
+        "arm64-v8a" ->
+            "aarch64-linux-android$minSdkVersion-clang++"
+        "x86" ->
+            "i686-linux-android$minSdkVersion-clang++"
+        "x86_64" ->
+            "x86_64-linux-android$minSdkVersion-clang++"
+        else ->
+            throw GradleScriptException("Unsupported abi $abi", FileNotFoundException("Unsupported abi $abi"))
+    }
 
-fun generateGolangModule(): String {
-    val moduleFile = file(Constants.SOURCE_PATH).resolve("go.mod")
+    val linker =  when(abi) {
+        "armeabi-v7a" ->
+            "arm-linux-androideabi-ld"
+        "arm64-v8a" ->
+            "aarch64-linux-android-ld"
+        "x86" ->
+            "i686-linux-android-ld"
+        "x86_64" ->
+            "x86_64-linux-android-ld"
+        else ->
+            throw GradleScriptException("Unsupported abi $abi", FileNotFoundException("Unsupported abi $abi"))
+    }
 
-    val replaces = moduleFile
-        .readLines()
-        .asSequence()
-        .map { line -> Constants.REGEX_REPLACE.matchEntire(line) }
-        .filterNotNull()
-        .map { match ->
-            val source = match.groupValues[1].trim()
-            val sVersion = match.groupValues[2].trim()
-            val target = match.groupValues[3].trim()
-            val tVersion = match.groupValues[4].trim()
+    val golangArch = when(abi) {
+        "armeabi-v7a" ->
+            "arm"
+        "arm64-v8a" ->
+            "arm64"
+        "x86" ->
+            "386"
+        "x86_64" ->
+            "amd64"
+        else ->
+            throw GradleScriptException("Unsupported abi $abi", FileNotFoundException("Unsupported abi $abi"))
+    }
 
-            val resolvedTarget = if ( target.startsWith("./") )
-                moduleFile.parentFile!!.resolve(target).canonicalPath
-            else
-                target
-
-            "replace $source $sVersion => $resolvedTarget $tVersion"
-        }.joinToString(separator = "\n")
-
-    return Constants.STUB_GO_MOD_CONTENT
-        .replace("{SOURCE_PATH}", file(Constants.SOURCE_PATH).absolutePath) + replaces
+    return mapOf(
+        "CC" to compilerBase.resolve(cCompiler.exe).absolutePath,
+        "CXX" to compilerBase.resolve(cppCompiler.exe).absolutePath,
+        "LD" to compilerBase.resolve(linker.exe).absolutePath,
+        "GOOS" to "android",
+        "GOARCH" to golangArch,
+        "CGO_ENABLED" to "1",
+        "CFLAGS" to "-O3 -Werror"
+    )
 }
 
 fun String.exec(pwd: File = buildDir, env: Map<String, String> = System.getenv()): String {
@@ -109,110 +135,51 @@ fun String.exec(pwd: File = buildDir, env: Map<String, String> = System.getenv()
     return outputStream.toString("utf-8")
 }
 
-task("generateClashBindSources") {
+task("compileClashCore") {
     onlyIf {
-        val lastModified = file(Constants.SOURCE_PATH).walk()
-            .filter { it.extension == "go" || it.extension == "mod" }
+        val sourceModified = golangSource.walk()
+            .filter {
+                when ( it.extension ) {
+                    "c", "cpp", "h", "go", "mod" -> true
+                    else -> false
+                }
+            }
             .map { it.lastModified() }
-            .max() ?: 0L
+            .max() ?: Long.MAX_VALUE
+        val targetModified = golangOutput.walk()
+            .filter { it.extension == "so" }
+            .map { it.lastModified() }
+            .min() ?: Long.MIN_VALUE
 
-        return@onlyIf lastModified > buildDir.resolve(Constants.GOLANG_OUTPUT).lastModified()
-    }
-
-    doFirst {
-        buildDir.resolve(Constants.GOLANG_BIND).apply {
-            deleteRecursively()
-            mkdirs()
-        }
+        sourceModified > targetModified
     }
 
     doLast {
-        val environment = generateGolangBuildEnvironment()
+        nativeAbis.parallelStream().forEach {
+            val env = generateGolangBuildEnvironment(it)
+            val out = golangOutput.resolve(it).apply {
+                mkdirs()
+            }.resolve("libclash.so")
 
-        val bind = buildDir.resolve(Constants.GOLANG_BIND).apply {
-            resolve("main.go").writeText(Constants.STUB_GO_FILE_CONTENT)
-            resolve("go.mod").writeText(generateGolangModule())
-        }
-
-        "go mod vendor".exec(pwd = bind, env = environment)
-
-        buildDir.resolve(Constants.GOLANG_BIND).apply {
-            resolve("vendor").renameTo(resolve("src"))
-            resolve("go.mod").delete()
-            resolve("main.go").delete()
-            resolve("go.sum").delete()
+            "go build --buildmode=c-shared -trimpath -o \"$out\"".exec(pwd = golangSource, env = env)
         }
     }
-}
-
-task("assembleClashCore") {
-    dependsOn(tasks["generateClashBindSources"])
-
-    onlyIf {
-        !tasks["generateClashBindSources"].state.skipped
-    }
-
-    doFirst {
-        val environment = generateGolangBuildEnvironment()
-
-        "go get golang.org/x/mobile/cmd/gomobile".exec(env = environment)
-    }
-
-    doLast {
-        val bind = buildDir.resolve(Constants.GOLANG_BIND)
-        val environment = generateGolangBuildEnvironment(bind.absolutePath)
-
-        "gomobile init".exec(pwd = bind, env = environment)
-        "gomobile bind -target=android -trimpath github.com/kr328/cfa/bridge"
-            .exec(pwd = buildDir.resolve(Constants.GOLANG_BASE), env = environment)
-    }
-}
-
-task("extractSources", type = Copy::class) {
-    dependsOn(tasks["assembleClashCore"])
-
-    from(zipTree(buildDir.resolve(Constants.GOLANG_OUTPUT))) {
-        include("**/*.so")
-        eachFile {
-            path = path.replace(Constants.REGEX_JNI, "jniLibs/")
-        }
-    }
-    from(zipTree(buildDir.resolve(Constants.GOLANG_OUTPUT_SOURCES))) {
-        include("**/*.java")
-        into("classes")
-    }
-
-    destinationDir = buildDir.resolve(Constants.OUTPUT_PATH)
 }
 
 task("downloadGeoipDatabase") {
-    dependsOn(tasks["extractSources"])
+    val geoipFile = geoipOutput.resolve("Country.mmdb")
 
     onlyIf {
-        val file = buildDir.resolve(Constants.OUTPUT_PATH).resolve("assets/Country.mmdb")
-
-        System.currentTimeMillis() - file.lastModified() > Constants.GEOIP_INVALID_INTERVAL
+        System.currentTimeMillis() - geoipFile.lastModified() > geoipInvalidate.toMillis()
     }
 
     doLast {
-        val assets = buildDir.resolve(Constants.OUTPUT_PATH).resolve("assets")
+        geoipOutput.mkdirs()
 
-        assets.mkdirs()
-
-        URL(Constants.GEOIP_DATABASE_URL).openConnection().getInputStream().use { input ->
-            FileOutputStream(assets.resolve("Country.mmdb")).use { output ->
+        URL(geoipDatabaseUrl).openConnection().getInputStream().use { input ->
+            FileOutputStream(geoipFile).use { output ->
                 input.copyTo(output)
             }
         }
     }
-}
-
-task("resetGolangPathMode", type = Exec::class) {
-    onlyIf {
-        !Os.isFamily(Os.FAMILY_WINDOWS)
-    }
-
-    commandLine("chmod", "-R", "777", buildDir.resolve(Constants.GOLANG_PATH))
-
-    isIgnoreExitValue = true
 }

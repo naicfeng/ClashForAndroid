@@ -35,7 +35,7 @@ func init() {
 		Listen:            ":0",
 		EnhancedMode:      dns.FAKEIP,
 		FakeIPRange:       "198.18.0.0/16",
-		FakeIPFilter:      []string{},
+		FakeIPFilter:      defaultFakeIPFilter,
 		DefaultNameserver: defaultNameServers,
 	}
 }

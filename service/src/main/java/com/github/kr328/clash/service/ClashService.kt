@@ -4,7 +4,10 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import com.github.kr328.clash.service.clash.ClashRuntime
-import com.github.kr328.clash.service.clash.module.*
+import com.github.kr328.clash.service.clash.module.CloseModule
+import com.github.kr328.clash.service.clash.module.DynamicNotificationModule
+import com.github.kr328.clash.service.clash.module.ReloadModule
+import com.github.kr328.clash.service.clash.module.StaticNotificationModule
 import com.github.kr328.clash.service.settings.ServiceSettings
 import com.github.kr328.clash.service.util.broadcastClashStarted
 import com.github.kr328.clash.service.util.broadcastClashStopped
