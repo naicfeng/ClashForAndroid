@@ -71,7 +71,7 @@ android {
             }
         }
         signingConfigs {
-            named("release") {
+            maybeCreate("release").apply {
                 storeFile = rootProject.file(Objects.requireNonNull(properties.getProperty("storeFile")))
                 storePassword = System.getenv("KEYSTORE_PWD")
                 keyAlias = Objects.requireNonNull(properties.getProperty("keyAlias"))
@@ -79,7 +79,7 @@ android {
             }
         }
         buildTypes {
-            named("release") {
+            maybeCreate("release").apply {
                 this.signingConfig = signingConfigs.findByName("release")
             }
         }
