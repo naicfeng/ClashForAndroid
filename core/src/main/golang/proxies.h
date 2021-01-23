@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 typedef enum proxy_type_t {
-    Direct, Reject, Socks5, Http, Shadowsocks, Vmess, Snell, Trojan, Selector, Fallback, LoadBalance, URLTest, Relay, Unknown
+    Direct, Reject, Socks5, Http, Shadowsocks, ShadowsocksR, Vmess, Snell, Trojan, Selector, Fallback, LoadBalance, URLTest, Relay, Unknown
 } proxy_type_t;
 
 typedef struct proxy_t {

@@ -46,6 +46,7 @@ private:
     jstring sDirect;
     jstring sReject;
     jstring sShadowsocks;
+    jstring sShadowsocksR;
     jstring sSnell;
     jstring sSocks5;
     jstring sHttp;

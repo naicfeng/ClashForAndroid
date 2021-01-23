@@ -41,6 +41,7 @@ Master::Master(JavaVM *vm, JNIEnv *env): vm(vm) {
     sDirect = g<jstring>(env, env->NewStringUTF("Direct"));
     sReject = g<jstring>(env, env->NewStringUTF("Reject"));
     sShadowsocks = g<jstring>(env, env->NewStringUTF("Shadowsocks"));
+    sShadowsocksR = g<jstring>(env, env->NewStringUTF("ShadowsocksR"));
     sSnell = g<jstring>(env, env->NewStringUTF("Snell"));
     sSocks5 = g<jstring>(env, env->NewStringUTF("Socks5"));
     sHttp = g<jstring>(env, env->NewStringUTF("Http"));
@@ -165,6 +166,9 @@ jobject Master::Context::createProxy(char const *name, proxy_type_t type, jlong 
             break;
         case Shadowsocks:
             ts = master->sShadowsocks;
+            break;
+        case ShadowsocksR:
+            ts = master->sShadowsocksR;
             break;
         case Vmess:
             ts = master->sVmess;

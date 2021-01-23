@@ -17,7 +17,7 @@ data class Proxy constructor(
         REJECT("Reject", false),
 
         SHADOWSOCKS("Shadowsocks", false),
-	SHADOWSOCKSR("ShadowsocksR", false),
+        SHADOWSOCKSR("ShadowsocksR", false),
         SNELL("Snell", false),
         SOCKS5("Socks5", false),
         HTTP("Http", false),

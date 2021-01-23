@@ -4,4 +4,4 @@ include(":service")
 include(":design")
 include(":common")
 
-rootProject.name = "ClashForAndroid"
+rootProject.name = "ClashRForAndroid"

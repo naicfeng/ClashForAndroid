@@ -136,6 +136,8 @@ func typeToProxyTypeC(t constant.AdapterType) C.proxy_type_t {
 
 	case constant.Shadowsocks:
 		return C.Shadowsocks
+	case constant.ShadowsocksR:
+		return C.ShadowsocksR
 	case constant.Snell:
 		return C.Snell
 	case constant.Socks5:
