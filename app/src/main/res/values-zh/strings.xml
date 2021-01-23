@@ -128,7 +128,7 @@
     <string name="profile_not_found">配置文件丢失</string>
     <string name="more_than_15_minutes">大于15分钟</string>
     <string name="loading">载入中</string>
-    <string name="tips_support"><![CDATA[Clash for Android 是一个<strong>免费开源</strong>的项目<br /> 我们<strong>不提供</strong>任何代理服务<br />请务必<strong>不要</strong>反馈非应用自身引起的问题]]></string>
+    <string name="tips_support"><![CDATA[ClashR for Android 是一个<strong>免费开源</strong>的项目<br /> 我们<strong>不提供</strong>任何代理服务<br />请务必<strong>不要</strong>反馈非应用自身引起的问题]]></string>
     <string name="donate">捐赠</string>
     <string name="clone_profile">复制配置</string>
     <string name="upload_logcat">上传日志</string>

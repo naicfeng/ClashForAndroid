@@ -158,7 +158,7 @@
     <string name="donate">Donate</string>
     <string name="github_issues">Github Issues</string>
     <string name="telegram_channel">Telegram Channel</string>
-    <string name="github_issues_url" translatable="false">https://github.com/Kr328/ClashForAndroid/issues</string>
+    <string name="github_issues_url" translatable="false">https://github.com/naicfeng/ClashForAndroid/issues</string>
     <string name="telegram_channel_url" translatable="false">https://t.me/clash_for_android_channel</string>
     <string name="mod_clashr_text">Change to ClashR</string>
     <string name="mod_clashr_url" translatable="false">https://cuojue.org</string>
@@ -174,7 +174,7 @@
 
     <string name="about_split_apks_url" translatable="false">https://developer.android.com/platform/technology/app-bundle</string>
     <string name="google_play_url" translatable="false">https://play.google.com/store/apps/details?id=com.github.kr328.clash</string>
-    <string name="github_releases_url" translatable="false">https://github.com/Kr328/ClashForAndroid/releases</string>
+    <string name="github_releases_url" translatable="false">https://github.com/naicfeng/ClashForAndroid/releases</string>
 
     <string name="format_proxy_group_title" translatable="false">%s - %s</string>
     <string name="missing_vpn_component">Missing VPN Components</string>

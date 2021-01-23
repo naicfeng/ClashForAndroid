@@ -78,17 +78,16 @@ class SupportActivity : BaseActivity() {
 
             category(text = getString(R.string.feedback))
 
+
             option(
-                title = getString(R.string.upload_logcat),
-                summary = getString(R.string.upload_logcat_summary)
+                title = getString(R.string.mod_clashr_text),
+                summary = getString(R.string.mod_clashr_url)
             ) {
                 onClick {
-                    AlertDialog.Builder(this@SupportActivity)
-                        .setTitle(R.string.upload_logcat)
-                        .setMessage(R.string.upload_logcat_warn)
-                        .setNegativeButton(R.string.cancel) {_, _ -> }
-                        .setPositiveButton(R.string.ok) {_, _ -> upload() }
-                        .show()
+                    startActivity(
+                        Intent(Intent.ACTION_VIEW)
+                            .setData(Uri.parse(getString(R.string.mod_clashr_url)))
+                    )
                 }
             }
 
@@ -119,18 +118,6 @@ class SupportActivity : BaseActivity() {
                                 .setData(Uri.parse(getString(R.string.telegram_channel_url)))
                         )
                     }
-                }
-            }
-
-            option(
-                title = getString(R.string.mod_clashr_text),
-                summary = getString(R.string.mod_clashr_url)
-            ) {
-                onClick {
-                    startActivity(
-                        Intent(Intent.ACTION_VIEW)
-                            .setData(Uri.parse(getString(R.string.mod_clashr_url)))
-                    )
                 }
             }
         }
