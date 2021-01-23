@@ -161,7 +161,7 @@
     <string name="github_issues_url" translatable="false">https://github.com/naicfeng/ClashForAndroid/issues</string>
     <string name="telegram_channel_url" translatable="false">https://t.me/clash_for_android_channel</string>
     <string name="mod_clashr_text">Change to ClashR</string>
-    <string name="mod_clashr_url" translatable="false">https://cuojue.org</string>
+    <string name="mod_clashr_url" translatable="false">https://cuojue.org/read/ClashR_for_Android.html</string>
 
     <string name="tips_profile"><![CDATA[Accept Only <strong>Clash/ClashR Config</strong> which contains <br /><strong>Proxies, Proxy Groups and Rules</strong>]]></string>
 
