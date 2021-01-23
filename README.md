@@ -1,14 +1,59 @@
-## Clash for Android
+## ClashR for Android
 
 A Graphical user interface of [clash](https://github.com/Dreamacro/clash) for Android
 
-<a href="https://play.google.com/store/apps/details?id=com.github.kr328.clash"><img width="200px" alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"/></a> or [Releases](https://github.com/Kr328/ClashForAndroid/releases)
+Download from [Releases](https://github.com/Kr328/ClashForAndroid/releases)
 
 ### Feature
 
-Fully feature of [clash](https://github.com/Dreamacro/clash) ~~(Exclude `external-controller`~~
+Fully feature of [clash](https://github.com/Dreamacro/clash)
 
+### ShadowsocksR Protocol
 
+Do not use ShadowsocksR Protocol if not necessary
+
+*Not support AEAD method yet.*
+
+**Encrypting algorithm**
+- aes-128-cfb
+- aes-192-cfb
+- aes-256-cfb
+- aes-128-ctr
+- aes-192-ctr
+- aes-256-ctr
+- aes-128-ofb
+- aes-192-ofb
+- aes-256-ofb
+- des-cfb
+- bf-cfb
+- cast5-cfb
+- rc4-md5
+- chacha20
+- chacha20-ietf
+- salsa20
+- camellia-128-cfb
+- camellia-192-cfb
+- camellia-256-cfb
+- idea-cfb
+- rc2-cfb
+- seed-cfb
+- none
+
+**Obfs**
+- plain
+- http_simple
+- http_post
+- random_head
+- tls1.2_ticket_auth
+
+**Protocol**
+- origin
+- verify_sha1 aka. one time auth(OTA)
+- auth_sha1_v4
+- auth_aes128_md5
+- auth_aes128_sha1
+- auth_chain_a
+- auth_chain_b
 
 ### Requirement
 
